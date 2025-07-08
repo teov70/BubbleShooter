@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+
+# VS Code settings (optional, if you're using VS Code)
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
+
+# Pygame-specific cache (if used)
+*.log
+
+# General backup files
+*.bak
+*.swp
+*~
+
+# Environment variables / secrets
+.env

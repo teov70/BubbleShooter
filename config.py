@@ -1,0 +1,39 @@
+# config.py
+
+# Screen
+SCREEN_WIDTH = 1000
+SCREEN_HEIGHT = 800
+TOOLBAR_HEIGHT = 100
+FPS = 60
+
+# Colors (RGB)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+BG_COLOR = (0, 100, 120)
+
+# Bubble
+BUBBLE_RADIUS = 15
+BUBBLE_COLORS = [
+    (255, 0, 0),     # Red
+    (0, 255, 0),     # Green
+    (0, 0, 255),     # Blue
+    (255, 255, 0),   # Yellow
+    (255, 0, 255),   # Magenta
+    (0, 255, 255),   # Cyan
+]
+
+# Grid
+
+GRID_COLS = 17.5 
+GRID_ROWS = 15
+GRID_TOP_OFFSET = 50
+GRID_LEFT_OFFSET = 50
+CELL_SIZE = (BUBBLE_RADIUS + 5) * 2
+#Game Field
+FIELD_WIDTH = CELL_SIZE * GRID_COLS
+FIELD_HEIGHT = CELL_SIZE * GRID_ROWS
+FIELD_COLOR = (0, 80, 100)
+# Shooter
+SHOOTER_Y = GRID_TOP_OFFSET + FIELD_HEIGHT + CELL_SIZE
+SHOOTER_X = GRID_LEFT_OFFSET + FIELD_WIDTH // 2
+PROJECTILE_SPEED = 500
