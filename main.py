@@ -13,7 +13,7 @@ bubble = Bubble(
     pos=(SHOOTER_X, SHOOTER_Y)
 )
 
-stuck_bubbles = []
+grid = BubbleGrid()
 bubble_ready = True  # This means: shooter bubble is available
 
 running = True
@@ -24,6 +24,7 @@ while running:
 
     screen.fill(BG_COLOR)
     draw_game_field(screen)
+    grid.draw(screen)
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and bubble.velocity.length_squared() == 0 and bubble_ready:
         mouse_pos = pygame.mouse.get_pos()
@@ -38,12 +39,9 @@ while running:
         bubble.draw(screen)
 
         if bubble.velocity.length_squared() == 0 and bubble.pos.y <= GRID_TOP_OFFSET + bubble.radius:
-            stuck_bubbles.append(bubble)  # Save the bubble
+            grid.add_bubble(bubble)
             bubble = None
             bubble_ready = False
-
-    for b in stuck_bubbles:
-        b.draw(screen)
 
     if bubble is None and not bubble_ready:
         bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(SHOOTER_X, SHOOTER_Y))
