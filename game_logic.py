@@ -2,6 +2,9 @@
 import pygame
 from config import *
 import random as rand
+from utils import load_bubble_surfaces
+
+BUBBLE_SURFACES: dict = {}
 
 class Bubble:
     def __init__(self, color, pos, velocity=pygame.Vector2(0, 0), radius=BUBBLE_RADIUS):
@@ -17,7 +20,13 @@ class Bubble:
         }
 
     def draw(self, screen):
-        pygame.draw.circle(screen, self.color, self.pos, self.radius)
+        global BUBBLE_SURFACES
+        if not BUBBLE_SURFACES:
+            BUBBLE_SURFACES = load_bubble_surfaces(BUBBLE_COLOR_PAIRS)
+
+        img = BUBBLE_SURFACES[self.color]
+        rect = img.get_rect(center=self.pos)
+        screen.blit(img, rect)
 
     def check_collision_with_neighbors(self, grid):
         row, col = grid.get_cell_for_position(*self.pos)
@@ -99,6 +108,7 @@ class BubbleGrid:
             col = int((x - GRID_LEFT_OFFSET) // COL_WIDTH)
         else:
             col = int((x - GRID_LEFT_OFFSET - COL_WIDTH // 2) // COL_WIDTH)
+        col = max(0, min(self.cols - 1, col))
         return row, col
     
     def get_position_for_cell(self, row: int, col: int) -> pygame.Vector2:
@@ -152,6 +162,7 @@ class BubbleGrid:
         return closest_cell
     
     def get_snap_cell(self, row: int, col: int, target_pos: pygame.Vector2) -> tuple[int, int] | None:
+        print(f"Snapping bubble to cell at row={row}, col={col} with target_pos={target_pos}")
         if not (0 <= row < self.rows and 0 <= col < self.cols):
             return None  # bubble stopped outside grid → game over
 

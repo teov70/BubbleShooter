@@ -7,6 +7,9 @@ import random
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+bg_img = pygame.image.load("assets/sprites/frutiger_aero3.png").convert()
+bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
 clock = pygame.time.Clock()
 
 bubble = Bubble(
@@ -69,7 +72,7 @@ while running:
         bubble_ready = True
 
     # ───────── drawing ─────────
-    screen.fill(BG_COLOR)
+    screen.blit(bg_img, (0, 0))
     draw_game_field(screen)
     grid.draw(screen)
     if bubble is not None:

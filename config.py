@@ -1,5 +1,6 @@
 # config.py
 from math import sqrt
+from utils import load_bubble_surfaces
 
 # Screen
 SCREEN_WIDTH = 1000
@@ -14,14 +15,15 @@ BG_COLOR = (0, 100, 120)
 
 # Bubble
 BUBBLE_RADIUS = 15
-BUBBLE_COLORS = [
-    (255, 0, 0),     # Red
-    (0, 255, 0),     # Green
-    (0, 0, 255),     # Blue
-    (255, 255, 0),   # Yellow
-    (255, 0, 255),   # Magenta
-    (0, 255, 255),   # Cyan
+BUBBLE_COLOR_PAIRS = [
+    ((255, 0, 0), "red"),
+    ((0, 255, 0), "green"),
+    ((0, 0, 255), "blue"),
+    ((255, 255, 0), "yellow"),
+    ((255, 0, 255), "magenta"),
+    ((0, 255, 255), "cyan"),
 ]
+BUBBLE_COLORS = [color for color, _ in BUBBLE_COLOR_PAIRS]
 
 # Grid
 GRID_TOP_OFFSET = 50
@@ -34,7 +36,7 @@ ROW_HEIGHT = (BUBBLE_RADIUS + 3) * sqrt(3)
 FIELD_WIDTH = COL_WIDTH * GRID_COLS
 FIELD_DRAW_WIDTH = FIELD_WIDTH + 0.5 * COL_WIDTH
 FIELD_HEIGHT = ROW_HEIGHT * GRID_ROWS
-FIELD_COLOR = (0, 80, 100)
+FIELD_COLOR = (180, 220, 255, 10)
 # Shooter
 SHOOTER_Y = GRID_TOP_OFFSET + FIELD_HEIGHT + ROW_HEIGHT
 SHOOTER_X = GRID_LEFT_OFFSET + FIELD_WIDTH // 2
