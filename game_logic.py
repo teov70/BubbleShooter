@@ -1,6 +1,7 @@
 # game_logic.py
 import pygame
 from config import *
+import random as rand
 
 class Bubble:
     def __init__(self, color, pos, velocity=pygame.Vector2(0, 0), radius=BUBBLE_RADIUS):
@@ -8,13 +9,11 @@ class Bubble:
         self.radius = radius
         self.pos = pygame.Vector2(pos)       # Accepts tuple or Vector2
         self.velocity = pygame.Vector2(velocity)
+        self.cell = None
         self.neighbors = {
-            "left": None,
-            "right": None,
-            "top_left": None,
-            "top_right": None,
-            "bottom_left": None,
-            "bottom_right": None,
+            "left": None, "right": None,
+            "top_left": None, "top_right": None,
+            "bottom_left": None, "bottom_right": None,
         }
 
     def draw(self, screen):
@@ -61,8 +60,38 @@ class BubbleGrid:
     def __init__(self, cols=GRID_COLS, rows=GRID_ROWS):
         self.rows = rows
         self.cols = cols
-        print(f"BubbleGrid rows={self.rows}, cols={self.cols}")
         self.bubbles = [[None] * self.cols for _ in range(self.rows)]
+
+        self.pop_queue: list[Bubble] = []   # bubbles waiting to pop
+        self.pop_interval = 100             # ms between pops
+        self.next_pop_time = 0              # timestamp of next pop
+        self.pending_floater_check = False  # run floater DFS when chain gone
+
+    def draw(self, screen):
+        for row in self.bubbles:
+            for bubble in row:
+                if bubble is not None:
+                    bubble.draw(screen)
+
+    def remove_bubble(self, bubble):
+        if not bubble.cell:
+            print("⚠️ Tried to remove bubble without valid cell")
+            return
+        row, col = bubble.cell
+        self.bubbles[row][col] = None
+        bubble.cell = None
+
+    def destroy_bubbles(self, match_chain: list[tuple[int, int]]):
+        if len(match_chain) < 3:
+            return
+
+        for row, col in match_chain:
+            bubble = self.bubbles[row][col]
+            if bubble:
+                self.pop_queue.append(bubble)
+
+        self.next_pop_time = pygame.time.get_ticks() + self.pop_interval
+        self.pending_floater_check = True
 
     def get_cell_for_position(self, x, y) -> tuple[int, int]:
         row = int((y - GRID_TOP_OFFSET) // ROW_HEIGHT)
@@ -79,6 +108,14 @@ class BubbleGrid:
         else:
             x = GRID_LEFT_OFFSET + (col + 1) * COL_WIDTH
         return pygame.Vector2(x, y)
+    
+    def populate_random_rows(self, num_rows=9, colors=BUBBLE_COLORS):
+        for row in range(num_rows):
+            for col in range(self.cols):
+                pos = self.get_position_for_cell(row, col)
+                color = rand.choice(colors)
+                bubble = Bubble(color, pos)
+                self.add_bubble(bubble)
     
     def get_neighbor_coords(self, row, col):
         if row % 2 == 0:
@@ -152,6 +189,7 @@ class BubbleGrid:
             return
         if 0 <= col < self.cols and 0 <= row < self.rows:
             bubble.pos = self.get_position_for_cell(row, col)
+            bubble.cell = (row, col)
             self.bubbles[row][col] = bubble
 
         neighbors = self.get_neighbor_coords(row, col)
@@ -174,12 +212,70 @@ class BubbleGrid:
             if v:
                 print(f" - {k}: neighbor exists")
 
+    def get_connected_same_color(self, start_row, start_col):
+        """Recursive function using DFS to find all connected bubbles of the same color."""
+        visited = set()
+        result = []
 
-    def draw(self, screen):
-        for row in self.bubbles:
-            for bubble in row:
-                if bubble is not None:
-                    bubble.draw(screen)
+        def dfs(row, col, target_color):
+            if (row, col) in visited:
+                return
+            visited.add((row, col))
+
+            bubble = self.bubbles[row][col]
+            if not bubble or bubble.color != target_color:
+                return
+
+            result.append((row, col))
+
+            for _, n_row, n_col in self.get_neighbor_coords(row, col):
+                if 0 <= n_row < self.rows and 0 <= n_col < self.cols:
+                    dfs(n_row, n_col, target_color)
+
+        start_bubble = self.bubbles[start_row][start_col]
+        if start_bubble:
+            dfs(start_row, start_col, start_bubble.color)
+
+        return result
+    
+    def enqueue_floating_bubbles(self):
+        """Find bubbles not connected to the top row and enqueue them for destruction."""
+        visited: set[tuple[int, int]] = set()
+
+        # mark all bubbles reachable from the top row
+        def dfs(row, col):
+            if (row, col) in visited:
+                return
+            visited.add((row, col))
+            for _, r2, c2 in self.get_neighbor_coords(row, col):
+                if self.bubbles[r2][c2]:
+                    dfs(r2, c2)
+
+        # start DFS from every occupied top-row cell
+        for col in range(self.cols):
+            if self.bubbles[0][col]:
+                dfs(0, col)
+
+        # enqueue floaters (scan bottom-up for nicer effect)
+        for r in reversed(range(self.rows)):
+            for c in range(self.cols):
+                bub = self.bubbles[r][c]
+                if bub and (r, c) not in visited:
+                    self.pop_queue.append(bub)
+
+    def update(self, now):
+        # pop animation
+        while self.pop_queue and now >= self.next_pop_time:
+            bubble = self.pop_queue.pop(0)
+            self.remove_bubble(bubble)
+            self.next_pop_time += self.pop_interval
+
+        # when chain finished and floaters still pending
+        if self.pending_floater_check and not self.pop_queue:
+            self.enqueue_floating_bubbles()
+            self.pending_floater_check = False
+            if self.pop_queue:                 # floaters found
+                self.next_pop_time = now + self.pop_interval
 
 def compute_velocity(start_pos, target_pos, speed):
     direction = pygame.Vector2(target_pos) - pygame.Vector2(start_pos)
