@@ -76,8 +76,8 @@ class BubbleGrid:
         self.pop_interval = 100             # ms between pops
         self.next_pop_time = 0              # timestamp of next pop
         self.pending_floater_check = False  # run floater DFS when chain gone
-        self.non_clearing_shot_count = 0      # shots since last auto-row
-        self.non_clearing_threshold  = 5
+        self.non_clearing_count = 0      # shots since last auto-row
+        self.non_clearing_threshold  = 6
     def draw(self, screen):
         for row in self.bubbles:
             for bubble in row:
@@ -312,12 +312,23 @@ class BubbleGrid:
         return True
     
     def register_non_clearing_shot(self) -> bool:
-        """Increment counter; add a row when threshold reached.
-        Returns False if the row addition caused game-over."""
-        self.non_clearing_shot_count += 1
-        if self.non_clearing_shot_count >= self.non_clearing_threshold:
-            self.non_clearing_shot_count = 0
-            return self.add_row_to_top()      # may return False on overflow
+        """Increments count; adds row if threshold reached.
+        Lowers threshold after each addition, cycles back to 6 after hitting 2.
+        Returns False if row addition causes game over."""
+        self.non_clearing_count += 1
+
+        if self.non_clearing_count >= self.non_clearing_threshold:
+            self.non_clearing_count = 0
+
+            if not self.add_row_to_top():
+                return False  # game over due to overflow
+
+            # cycle threshold down to 2, then reset back to 6
+            if self.non_clearing_threshold > 2:
+                self.non_clearing_threshold -= 1
+            else:
+                self.non_clearing_threshold = 6
+
         return True
 
     def update(self, now):

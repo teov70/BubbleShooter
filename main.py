@@ -12,14 +12,14 @@ bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 clock = pygame.time.Clock()
 
-bubble = Bubble(
-    color=random.choice(BUBBLE_COLORS),
-    pos=(SHOOTER_X, SHOOTER_Y)
-)
+bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(SHOOTER_X, SHOOTER_Y))
+bubble_ready = True  # This means: shooter bubble is available
+
+# Prepare the next bubble preview
+next_bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(PREVIEW_X, PREVIEW_Y))
 
 grid = BubbleGrid()
 grid.populate_random_rows()
-bubble_ready = True  # This means: shooter bubble is available
 
 running = True
 while running:
@@ -70,16 +70,22 @@ while running:
 
     # spawn a new shooter when ready
     if bubble is None and not bubble_ready:
-        bubble = Bubble(color=random.choice(BUBBLE_COLORS),
-                        pos=(SHOOTER_X, SHOOTER_Y))
+        bubble = next_bubble
+        bubble.pos = pygame.Vector2(SHOOTER_X, SHOOTER_Y)
+        next_bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(PREVIEW_X, PREVIEW_Y))
         bubble_ready = True
 
     # ───────── drawing ─────────
     screen.blit(bg_img, (0, 0))
     draw_game_field(screen)
+    draw_bubble_bar(screen)
     grid.draw(screen)
     if bubble is not None:
         bubble.draw(screen)
+        next_bubble.draw(screen)
+
+    remaining_shots = max(0, grid.non_clearing_threshold - grid.non_clearing_count)
+    draw_warning_bubbles(screen, remaining_shots,(PREVIEW_X, PREVIEW_Y), Bubble)
 
     pygame.display.flip()
     clock.tick(FPS)
