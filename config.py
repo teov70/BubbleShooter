@@ -13,6 +13,14 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 BG_COLOR = (0, 100, 120)
 
+# Sounds
+POP_SOUND_PATHS = [
+    "assets/sounds/pop_1.wav",
+    "assets/sounds/pop_2.wav",
+    "assets/sounds/pop_3.wav"
+]
+PLOP_SOUND_PATH = "assets/sounds/plop.wav"
+
 # Bubble
 BUBBLE_RADIUS = 15
 BUBBLE_COLOR_PAIRS = [

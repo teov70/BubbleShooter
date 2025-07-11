@@ -7,7 +7,7 @@ import random
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-bg_img = pygame.image.load("assets/sprites/frutiger_aero3.png").convert()
+bg_img = pygame.image.load("assets/sprites/frutiger_aero.png").convert()
 bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 clock = pygame.time.Clock()
@@ -57,7 +57,10 @@ while running:
 
                 # match-3 detection → enqueue pops (floaters handled inside grid)
                 match_chain = grid.get_connected_same_color(*snap_cell)
-                grid.destroy_bubbles(match_chain)
+                game_continue = grid.destroy_bubbles(match_chain)
+                if not game_continue:
+                    running = False
+
 
             bubble = None
             bubble_ready = False
