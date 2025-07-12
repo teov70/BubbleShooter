@@ -3,6 +3,8 @@ import pygame
 from config import *
 import random
 
+_POPUP_SURFACES = None
+
 pygame.mixer.init()
 pygame.mixer.music.load("assets/sounds/frutigeraeromusic.ogg")
 pygame.mixer.music.set_volume(0.4)
@@ -61,3 +63,37 @@ def draw_warning_bubbles(screen, remaining: int, preview_pos: tuple[int, int], b
         x = base_x + i * bubble_spacing
         gray = bubble_cls(color=GRAY, pos=(x, y))
         gray.draw(screen)
+
+def _load_popup_surfaces():
+    global _POPUP_SURFACES
+    if _POPUP_SURFACES is None:
+        _POPUP_SURFACES = {
+            key: pygame.image.load(path).convert_alpha()
+            for key, path in GAME_OVER_POPUP
+        }
+    return _POPUP_SURFACES
+
+# ── popup geometry (337×220 popup in 1000×800 screen) ──────
+POP_W, POP_H = 337, 220
+SCREEN_W, SCREEN_H = 1000, 800
+POP_X = (SCREEN_W - POP_W) // 2          # 331
+POP_Y = (SCREEN_H - POP_H) // 2          # 290
+
+yes_rect   = pygame.Rect(POP_X + 114, POP_Y + 162, 103, 37)
+quit_rect  = pygame.Rect(POP_X + 222, POP_Y + 162, 97, 37)
+cross_rect = pygame.Rect(POP_X + 271, POP_Y +   1,  58, 28)
+
+# ── draw helpers ───────────────────────────────────────────
+def draw_game_over_popup(screen):
+    surf = _load_popup_surfaces()
+    pos = (POP_X, POP_Y)
+    screen.blit(surf["popup_img"], pos)
+    screen.blit(surf["yes_img"],   pos)
+    screen.blit(surf["quit_img"],  pos)
+    screen.blit(surf["cross_img"], pos)
+
+def debug_draw_hitboxes(screen):
+    brd = 2
+    pygame.draw.rect(screen, (0, 0, 0), yes_rect,   brd, border_radius=4)
+    pygame.draw.rect(screen, (0, 0, 0), quit_rect,  brd, border_radius=4)
+    pygame.draw.rect(screen, (0, 0, 0), cross_rect, brd, border_radius=4)

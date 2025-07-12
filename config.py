@@ -6,13 +6,14 @@ from utils import load_bubble_surfaces
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
 TOOLBAR_HEIGHT = 100
-FPS = 60
+FPS = 144
+
+PROJECTILE_SPEED = 450
 
 # Colors (RGB)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
-BG_COLOR = (0, 100, 120)
 
 # Sounds
 POP_SOUND_PATHS = [
@@ -21,6 +22,14 @@ POP_SOUND_PATHS = [
     "assets/sounds/pop_3.wav"
 ]
 PLOP_SOUND_PATH = "assets/sounds/plop.wav"
+
+# Game Over Popup
+GAME_OVER_POPUP = [
+("popup_img", "assets/sprites/game_over.png"),
+("yes_img", "assets/sprites/yes_button.png"),
+("quit_img", "assets/sprites/quit_button.png"),
+("cross_img", "assets/sprites/cross_button.png")
+]
 
 # Bubble
 BUBBLE_RADIUS = 15
@@ -33,6 +42,7 @@ BUBBLE_COLOR_PAIRS = [
     ((0, 255, 255), "cyan"),
     ((128, 128, 128), "gray")
 ]
+
 BUBBLE_COLORS = [color for color, name in BUBBLE_COLOR_PAIRS if name != "gray"]
 
 # Grid
@@ -52,9 +62,6 @@ BAR_COLOR = (181, 242, 255, 90)
 # Shooter
 SHOOTER_Y = GRID_TOP_OFFSET + FIELD_HEIGHT + 2.5*ROW_HEIGHT
 SHOOTER_X = GRID_LEFT_OFFSET + FIELD_WIDTH // 2
-
 #Preview
 PREVIEW_Y = GRID_TOP_OFFSET + FIELD_HEIGHT + 2.5*ROW_HEIGHT
 PREVIEW_X = GRID_LEFT_OFFSET + COL_WIDTH*0.5
-
-PROJECTILE_SPEED = 500
