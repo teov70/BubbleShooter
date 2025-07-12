@@ -2,7 +2,8 @@
 import pygame
 from config import *
 from game_view import *
-import random as rand
+import random
+import secrets as rand
 from utils import load_bubble_surfaces
 
 BUBBLE_SURFACES: dict = {}
@@ -78,6 +79,9 @@ class BubbleGrid:
         self.pending_floater_check = False  # run floater DFS when chain gone
         self.non_clearing_count = 0      # shots since last auto-row
         self.non_clearing_threshold  = 6
+        self.score = 0                   # total points
+        self._floaters_scoring = False   # flag: next enqueue_floating_bubbles gives points
+
     def draw(self, screen):
         for row in self.bubbles:
             for bubble in row:
@@ -106,6 +110,14 @@ class BubbleGrid:
         if len(match_chain) < 3:
             play_plop_sound()
             return self.register_non_clearing_shot()
+        
+        n = len(match_chain)
+        # chain scoring: 30 for first 3, then 20, 40, 80, ...
+        if n == 3:
+            chain_pts = 30
+        else:
+            chain_pts = 30 + 20 * ((2 ** (n - 3)) - 1)
+        self.score += chain_pts
 
         for row, col in match_chain:
             bubble = self.bubbles[row][col]
@@ -114,6 +126,7 @@ class BubbleGrid:
 
         self.next_pop_time = pygame.time.get_ticks() + self.pop_interval
         self.pending_floater_check = True
+        self._floaters_scoring = True
         return True
 
     def get_cell_for_position(self, x, y) -> tuple[int, int]:
@@ -287,7 +300,10 @@ class BubbleGrid:
             for c in range(self.cols):
                 bub = self.bubbles[r][c]
                 if bub and (r, c) not in visited:
+                    if self._floaters_scoring:
+                        self.score += 100
                     self.pop_queue.append(bub)
+        self._floaters_scoring = False
 
     def add_row_to_top(self):
         for col in range(self.cols):

@@ -1,6 +1,7 @@
 # main.py
 import pygame
 import random
+import secrets
 
 from config import *
 from game_logic import *
@@ -106,6 +107,10 @@ while running:
 
     remaining_shots = max(0, grid.non_clearing_threshold - grid.non_clearing_count)
     draw_warning_bubbles(screen, remaining_shots, (PREVIEW_X, PREVIEW_Y), Bubble)
+
+    font = pygame.font.SysFont("Consolas", 30)
+    score_surf = font.render(f"Score:{grid.score}", True, (255, 255, 255))
+    screen.blit(score_surf, (730, 280))
 
     if game_over:
         draw_game_over_popup(screen)
