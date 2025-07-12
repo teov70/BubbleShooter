@@ -6,6 +6,10 @@ from game_logic import *
 from game_view import *
 
 pygame.init()
+pygame.display.set_caption("Aero Bubble Shooter")
+icon = pygame.image.load("assets/sprites/bubble_icon.png")
+#icon = pygame.transform.scale(icon, (32, 32))
+pygame.display.set_icon(icon)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 bg_img = pygame.image.load("assets/sprites/frutiger_aero1.png").convert()
 bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
