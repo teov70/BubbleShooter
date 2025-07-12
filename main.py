@@ -1,15 +1,13 @@
 # main.py
 import pygame
 import random
-import secrets
-
 from config import *
 from game_logic import *
 from game_view import *
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-bg_img = pygame.image.load("assets/sprites/frutiger_aero.png").convert()
+bg_img = pygame.image.load("assets/sprites/frutiger_aero1.png").convert()
 bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 

@@ -2,8 +2,7 @@
 import pygame
 from config import *
 from game_view import *
-import random
-import secrets as rand
+import random as rand
 from utils import load_bubble_surfaces
 
 BUBBLE_SURFACES: dict = {}
