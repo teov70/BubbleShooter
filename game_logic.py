@@ -78,8 +78,9 @@ class BubbleGrid:
         self.pending_floater_check = False  # run floater DFS when chain gone
         self.non_clearing_count = 0      # shots since last auto-row
         self.non_clearing_threshold  = 6
-        self.score = 0                   # total points
+        self.score = 0      # total points
         self._floaters_scoring = False   # flag: next enqueue_floating_bubbles gives points
+        self.row_offset = False
 
     def draw(self, screen):
         for row in self.bubbles:
@@ -127,10 +128,13 @@ class BubbleGrid:
         self.pending_floater_check = True
         self._floaters_scoring = True
         return True
+    
+    def is_flush_left(self, row: int) -> bool:
+        return (row % 2 == 0) != self.row_offset
 
     def get_cell_for_position(self, x, y) -> tuple[int, int]:
         row = int((y - GRID_TOP_OFFSET) // ROW_HEIGHT)
-        if row % 2 == 0:
+        if self.is_flush_left(row):
             col = int((x - GRID_LEFT_OFFSET) // COL_WIDTH)
         else:
             col = int((x - GRID_LEFT_OFFSET - COL_WIDTH // 2) // COL_WIDTH)
@@ -139,7 +143,7 @@ class BubbleGrid:
     
     def get_position_for_cell(self, row: int, col: int) -> pygame.Vector2:
         y = GRID_TOP_OFFSET + (row + 0.5) * ROW_HEIGHT
-        if row % 2 == 0:
+        if self.is_flush_left(row):
             x = GRID_LEFT_OFFSET + (col + 0.5) * COL_WIDTH
         else:
             x = GRID_LEFT_OFFSET + (col + 1) * COL_WIDTH
@@ -154,13 +158,12 @@ class BubbleGrid:
                 self.add_bubble(bubble)
     
     def get_neighbor_coords(self, row, col):
-        if row % 2 == 0:
+        if self.is_flush_left(row):
             directions = [(-1, -1), (-1, 0), (0, -1), (0, 1), (1, -1), (1, 0)]
-            names = ["top_left", "top_right", "left", "right", "bottom_left", "bottom_right"]
         else:
             directions = [(-1, 0), (-1, 1), (0, -1), (0, 1), (1, 0), (1, 1)]
-            names = ["top_left", "top_right", "left", "right", "bottom_left", "bottom_right"]
-
+            
+        names = ["top_left", "top_right", "left", "right", "bottom_left", "bottom_right"]
         result = []
         for (dr, dc), name in zip(directions, names):
             n_row, n_col = row + dr, col + dc
@@ -322,8 +325,9 @@ class BubbleGrid:
             self.bubbles[0][col] = new_bubble
 
         # After insertion, relink neighbors
+        self.row_offset = not self.row_offset
         self.update_all_bubbles()
-        self.pending_floater_check = True
+        #self.pending_floater_check = True
         return True
     
     def register_non_clearing_shot(self) -> bool:

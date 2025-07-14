@@ -6,17 +6,25 @@ from game_logic import *
 from game_view import *
 
 pygame.init()
-pygame.display.set_caption("Aero Bubble Shooter")
+
 icon = pygame.image.load("assets/sprites/bubble_icon.png")
-#icon = pygame.transform.scale(icon, (32, 32))
 pygame.display.set_icon(icon)
+pygame.display.set_caption("Aero Bubble Shooter")
+
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-bg_img = pygame.image.load("assets/sprites/frutiger_aero1.png").convert()
+bg_img = pygame.image.load("assets/sprites/frutiger_aero2.png").convert()
 bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
+#________________Game Over Popup_________________
+popup_assets = load_popup_surfaces()
+popup_pos = (POP_X, POP_Y)
 
-# ─────────────────── helpers ────────────────────
+yes_button = Button(popup_assets["yes"], popup_assets["yes_hover"], popup_pos)
+quit_button = Button(popup_assets["quit"], popup_assets["quit_hover"], popup_pos)
+cross_button = Button(popup_assets["cross"], popup_assets["cross_hover"], popup_pos)
+#─────────────────── helpers ────────────────────
+
 def restart_game() -> None:
     """Reset full game state: grid, shooter, preview, counters."""
     global grid, bubble, next_bubble, bubble_ready, game_over
@@ -109,10 +117,7 @@ while running:
 
     remaining_shots = max(0, grid.non_clearing_threshold - grid.non_clearing_count)
     draw_warning_bubbles(screen, remaining_shots, (PREVIEW_X, PREVIEW_Y), Bubble)
-
-    font = pygame.font.SysFont("Consolas", 30)
-    score_surf = font.render(f"Score:{grid.score}", True, (255, 255, 255))
-    screen.blit(score_surf, (730, 280))
+    draw_score(screen, grid.score)
 
     if game_over:
         draw_game_over_popup(screen)

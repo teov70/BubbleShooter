@@ -1,6 +1,5 @@
 # config.py
 from math import sqrt
-from utils import load_bubble_surfaces
 
 # Screen
 SCREEN_WIDTH = 1000
@@ -8,7 +7,7 @@ SCREEN_HEIGHT = 800
 TOOLBAR_HEIGHT = 100
 FPS = 144
 
-PROJECTILE_SPEED = 600
+PROJECTILE_SPEED = 500
 
 # Colors (RGB)
 WHITE = (255, 255, 255)
@@ -24,11 +23,14 @@ POP_SOUND_PATHS = [
 PLOP_SOUND_PATH = "assets/sounds/plop.wav"
 
 # Game Over Popup
-GAME_OVER_POPUP = [
-("popup_img", "assets/sprites/game_over.png"),
-("yes_img", "assets/sprites/yes_button.png"),
-("quit_img", "assets/sprites/quit_button.png"),
-("cross_img", "assets/sprites/cross_button.png")
+GAME_OVER_ASSETS = [
+("popup", "assets/sprites/game_over.png"),
+("yes", "assets/sprites/yes_button.png"),
+("quit", "assets/sprites/quit_button.png"),
+("cross", "assets/sprites/cross_button.png"),
+("yes_hover", "assets/sprites/yes_button_hover.png"),
+("quit_hover", "assets/sprites/quit_button_hover.png"),
+("cross_hover", "assets/sprites/cross_button_hover.png")
 ]
 
 # Bubble
