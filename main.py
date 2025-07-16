@@ -12,7 +12,7 @@ pygame.display.set_icon(icon)
 pygame.display.set_caption("Aero Bubble Shooter")
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-bg_img = pygame.image.load("assets/sprites/frutiger_aero2.png").convert()
+bg_img = pygame.image.load("assets/sprites/frutiger_aero1.png").convert()
 bg_img = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
@@ -20,64 +20,64 @@ clock = pygame.time.Clock()
 popup_assets = load_popup_surfaces()
 popup_pos = (POP_X, POP_Y)
 
-yes_button = Button(popup_assets["yes"], popup_assets["yes_hover"], popup_pos)
-quit_button = Button(popup_assets["quit"], popup_assets["quit_hover"], popup_pos)
-cross_button = Button(popup_assets["cross"], popup_assets["cross_hover"], popup_pos)
-#─────────────────── helpers ────────────────────
+popup_img = popup_assets["popup"]
+yes_btn = Button(popup_assets["yes"], popup_assets["yes_hover"], popup_pos)
+quit_btn = Button(popup_assets["quit"], popup_assets["quit_hover"], popup_pos)
+cross_btn = Button(popup_assets["cross"], popup_assets["cross_hover"], popup_pos)
 
+buttons = (yes_btn, quit_btn, cross_btn)
+
+#________________Widget_________________
+widget_assets = load_widget_surfaces()
+widget_pos = (WIDGET_X, WIDGET_Y)
+
+widget_img = widget_assets["widget"]
+
+#___________________ helpers ____________________
 def restart_game() -> None:
     """Reset full game state: grid, shooter, preview, counters."""
     global grid, bubble, next_bubble, bubble_ready, game_over
     grid = BubbleGrid()
     grid.populate_random_rows()
-
-    bubble = Bubble(color=random.choice(BUBBLE_COLORS),
-                    pos=(SHOOTER_X, SHOOTER_Y))
-    next_bubble = Bubble(color=random.choice(BUBBLE_COLORS),
-                         pos=(PREVIEW_X, PREVIEW_Y))
+    bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(SHOOTER_X, SHOOTER_Y))
+    next_bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(PREVIEW_X, PREVIEW_Y))
     bubble_ready = True
     game_over = False
 
-
-# ─────────────────── initial state ──────────────
+# ___________________ initial state ______________
 restart_game()
 running = True
 
-# ─────────────────── main loop ──────────────────
+# ___________________ main loop __________________
 while running:
-    # ───────── event handling ─────────
+    # _________ event handling _________
+    click_frame = False
+    click_pos = None
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            click_frame = True
+            click_pos = event.pos
 
-        if game_over:
-            # Only handle popup clicks
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if yes_rect.collidepoint(event.pos):
-                    restart_game()
-                elif quit_rect.collidepoint(event.pos) or cross_rect.collidepoint(event.pos):
-                    running = False
-            continue  # skip normal gameplay events
-
-        # Gameplay events (only when not game_over)
-        if (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
-            and bubble.velocity.length_squared() == 0 and bubble_ready):
-            mouse_pos = pygame.mouse.get_pos()
-            if (GRID_LEFT_OFFSET <= mouse_pos[0] <= GRID_LEFT_OFFSET + FIELD_DRAW_WIDTH and
-                GRID_TOP_OFFSET  <= mouse_pos[1] <= GRID_TOP_OFFSET  + FIELD_HEIGHT):
-                bubble.velocity = compute_velocity(bubble.pos, mouse_pos, PROJECTILE_SPEED)
-                bubble_ready = False
-
-    # ───────── update logic (only if not paused) ─────────
-    dt  = clock.get_time() / 1000
-    now = pygame.time.get_ticks()
+    # 2. INPUT SNAPSHOT _________________________________________
+    mouse_pos = pygame.mouse.get_pos()
+    mouse_lmb = pygame.mouse.get_pressed()[0]
 
     if not game_over:
-        # move active projectile
-        if bubble is not None:
-            bubble.move(dt, grid)
+        # Shoot bubble
+        if (click_frame and bubble_ready and bubble.velocity.length_squared() == 0 and
+            GRID_LEFT_OFFSET <= mouse_pos[0] <= GRID_LEFT_OFFSET + FIELD_DRAW_WIDTH and
+            GRID_TOP_OFFSET  <= mouse_pos[1] <= GRID_TOP_OFFSET  + FIELD_HEIGHT):
+            bubble.velocity = compute_velocity(bubble.pos, mouse_pos, PROJECTILE_SPEED)
+            bubble_ready = False
 
-            # snap when it stops
+        # Move active bubble
+        if bubble is not None:
+            bubble.move(clock.get_time() / 1000, grid)
+
+            # snap to cell when it stops and add it to grid
             if bubble.velocity.length_squared() == 0 and not bubble_ready:
                 row, col   = grid.get_cell_for_position(*bubble.pos)
                 snap_cell  = grid.get_snap_cell(row, col, bubble.pos)
@@ -95,7 +95,7 @@ while running:
                 bubble_ready = False
 
         # animate popping & floaters
-        grid.update(now)
+        grid.update(pygame.time.get_ticks())
 
         # spawn a new shooter when ready
         if bubble is None and not bubble_ready:
@@ -105,8 +105,20 @@ while running:
                                  pos=(PREVIEW_X, PREVIEW_Y))
             bubble_ready = True
 
-    # ───────── drawing ─────────
+    else:
+        # Update buttons
+        for b in buttons:
+            b.update(mouse_pos, mouse_lmb)
+
+        # React to clicks
+        if yes_btn.is_clicked():
+            restart_game()
+        elif quit_btn.is_clicked() or cross_btn.is_clicked():
+            running = False
+
+    # _________ drawing _________
     screen.blit(bg_img, (0, 0))
+    screen.blit(widget_img, widget_pos)
     draw_game_field(screen)
     draw_bubble_bar(screen)
     grid.draw(screen)
@@ -120,8 +132,9 @@ while running:
     draw_score(screen, grid.score)
 
     if game_over:
-        draw_game_over_popup(screen)
-        #debug_draw_hitboxes(screen)
+        screen.blit(popup_img, popup_pos)
+        for btn in buttons:
+            btn.draw(screen)
 
     pygame.display.flip()
     clock.tick(FPS)

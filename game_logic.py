@@ -149,7 +149,7 @@ class BubbleGrid:
             x = GRID_LEFT_OFFSET + (col + 1) * COL_WIDTH
         return pygame.Vector2(x, y)
     
-    def populate_random_rows(self, num_rows=9, colors=BUBBLE_COLORS):
+    def populate_random_rows(self, num_rows=STARTING_ROWS, colors=BUBBLE_COLORS):
         for row in range(num_rows):
             for col in range(self.cols):
                 pos = self.get_position_for_cell(row, col)

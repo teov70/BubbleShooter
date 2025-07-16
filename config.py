@@ -33,6 +33,19 @@ GAME_OVER_ASSETS = [
 ("cross_hover", "assets/sprites/cross_button_hover.png")
 ]
 
+# Game Over Popup geometry
+POP_W, POP_H = 337, 220
+POP_X = (SCREEN_WIDTH - POP_W) // 2          # 331
+POP_Y = (SCREEN_HEIGHT - POP_H) // 2          # 290
+
+WIDGET_ASSETS = [
+("widget", "assets/sprites/widget.png")
+]
+
+WIDGET_W, WIDGET_H = 500, 175
+WIDGET_X, WIDGET_Y = 236, SCREEN_HEIGHT - WIDGET_H
+
+
 # Bubble
 BUBBLE_RADIUS = 15
 BUBBLE_COLOR_PAIRS = [
@@ -47,6 +60,7 @@ BUBBLE_COLOR_PAIRS = [
 
 BUBBLE_COLORS = [color for color, name in BUBBLE_COLOR_PAIRS if name != "gray"]
 
+STARTING_ROWS = 11
 # Grid
 GRID_TOP_OFFSET = 50
 GRID_LEFT_OFFSET = 50
