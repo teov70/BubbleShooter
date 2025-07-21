@@ -5,41 +5,52 @@ import random
 
 _POPUP_SURFACES = None
 _WIDGET_SURFACES = None
+POP_SOUNDS = []
+PLOP_SOUND = None
+_cached_field_surf = None
+_cached_bar_surf = None
 
-pygame.mixer.init()
-#pygame.mixer.music.load("assets/sounds/frutigeraeromusic.ogg")
-pygame.mixer.music.load("assets/sounds/lotus_waters.ogg")
-pygame.mixer.music.set_volume(0.4)
-pygame.mixer.music.play(loops=-1)
-pop_sounds = [pygame.mixer.Sound(path) for path in POP_SOUND_PATHS]
-for s in pop_sounds:
-    s.set_volume(0.5)
-plop_sound = pygame.mixer.Sound(PLOP_SOUND_PATH)
-plop_sound.set_volume(1)
+def init_audio():
+    global POP_SOUNDS, PLOP_SOUND
+
+    pygame.mixer.init()
+    pygame.mixer.music.load("assets/sounds/frutigeraeromusic.ogg")
+    #pygame.mixer.music.load("assets/sounds/lotus_waters.ogg")
+    pygame.mixer.music.set_volume(0.4)
+    pygame.mixer.music.play(loops=-1)
+
+    POP_SOUNDS = [pygame.mixer.Sound(path) for path in POP_SOUND_PATHS]
+    for s in POP_SOUNDS:
+        s.set_volume(0.5)
+
+    PLOP_SOUND = pygame.mixer.Sound(PLOP_SOUND_PATH)
+    PLOP_SOUND.set_volume(1)
 
 def play_pop_sound():
-    random.choice(pop_sounds).play()
+    random.choice(POP_SOUNDS).play()
 
 def play_plop_sound():
-    plop_sound.play()
+    PLOP_SOUND.play()
 
 def draw_game_field(screen):
-    field_surf = pygame.Surface((FIELD_DRAW_WIDTH, FIELD_HEIGHT), pygame.SRCALPHA)
-    pygame.draw.rect(field_surf, FIELD_COLOR, field_surf.get_rect(), border_radius=20)
-    screen.blit(field_surf, (GRID_LEFT_OFFSET, GRID_TOP_OFFSET))
+    global _cached_field_surf
+    if _cached_field_surf is None:
+        _cached_field_surf = pygame.Surface((FIELD_DRAW_WIDTH, FIELD_HEIGHT), pygame.SRCALPHA)
+        pygame.draw.rect(_cached_field_surf, FIELD_COLOR, _cached_field_surf.get_rect(), border_radius=20)
+    screen.blit(_cached_field_surf, (GRID_LEFT_OFFSET, GRID_TOP_OFFSET))
 
-def draw_score(screen, score):
-        text_font = pygame.font.Font("assets/Arcade.ttf", 27)
-        score_font = pygame.font.Font("assets/Arcade.ttf", 52)
-        text_surf = text_font.render(f"Score", True, (255, 255, 255))
-        score_surf = score_font.render(f"{score}", True, (255, 255, 255))
+def draw_score(screen, score, fonts):
+        text_surf = fonts["text"].render(f"Score", True, (255, 255, 255))
+        score_surf = fonts["score"].render(f"{score}", True, (255, 255, 255))
         screen.blit(text_surf, (430, 720))
         screen.blit(score_surf, (430, 687))
 
 def draw_bubble_bar(screen):
-    bar_surf = pygame.Surface((COL_WIDTH*9.2, ROW_HEIGHT*1.3), pygame.SRCALPHA)
-    pygame.draw.rect(bar_surf, BAR_COLOR, bar_surf.get_rect(), border_radius=45)
-    screen.blit(bar_surf, (GRID_LEFT_OFFSET-4, GRID_TOP_OFFSET + FIELD_HEIGHT + 1.9*ROW_HEIGHT))
+    global _cached_bar_surf
+    if _cached_bar_surf is None:
+        _cached_bar_surf = pygame.Surface((COL_WIDTH*9.2, ROW_HEIGHT*1.3), pygame.SRCALPHA)
+        pygame.draw.rect(_cached_bar_surf, BAR_COLOR, _cached_bar_surf.get_rect(), border_radius=45)
+    screen.blit(_cached_bar_surf, (GRID_LEFT_OFFSET-4, GRID_TOP_OFFSET + FIELD_HEIGHT + 1.9*ROW_HEIGHT))
 
 def draw_warning_bubbles(screen, remaining: int, preview_pos: tuple[int, int], bubble_cls):
     """Draw bubbles that signal the next row addition."""
@@ -73,11 +84,6 @@ def load_widget_surfaces():
 
 #__________________Butoon Class______________________________
 class Button:
-    """
-    • No callbacks - main decides what to do.
-    • Per-pixel hover + debounced click.
-    • Idle / hover surfaces must have identical size.
-    """
     __slots__ = ("pos", "rect", "mask",
                  "_idle", "_hover",
                  "_hovered", "_clicked", "_prev_pressed")

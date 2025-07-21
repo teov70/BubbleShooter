@@ -68,6 +68,12 @@ GRID_COLS = 17
 GRID_ROWS = 15
 COL_WIDTH = (BUBBLE_RADIUS + 3) * 2
 ROW_HEIGHT = (BUBBLE_RADIUS + 3) * sqrt(3)
+
+DIRECTIONS = ["top_left", "top_right", "left", "right", "bottom_left", "bottom_right"]
+REVERSE_DIR = {
+            "left": "right", "right": "left",
+            "top_left": "bottom_right", "bottom_right": "top_left",
+            "top_right": "bottom_left", "bottom_left": "top_right"}
 #Game Field
 FIELD_WIDTH = COL_WIDTH * GRID_COLS
 FIELD_DRAW_WIDTH = FIELD_WIDTH + 0.5 * COL_WIDTH

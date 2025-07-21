@@ -14,12 +14,8 @@ class Bubble:
         self.pos = pygame.Vector2(pos)       # Accepts tuple or Vector2
         self.velocity = pygame.Vector2(velocity)
         self.cell = None
-        self.neighbors = {
-            "left": None, "right": None,
-            "top_left": None, "top_right": None,
-            "bottom_left": None, "bottom_right": None,
-        }
-
+        self.neighbors = {direction : None for direction in DIRECTIONS}
+       
     def draw(self, screen):
         global BUBBLE_SURFACES
         if not BUBBLE_SURFACES:
@@ -93,15 +89,10 @@ class BubbleGrid:
             print("⚠️ Tried to remove bubble without valid cell")
             return
         row, col = bubble.cell
-        reverse = {
-            "left": "right", "right": "left",
-            "top_left": "bottom_right", "bottom_right": "top_left",
-            "top_right": "bottom_left", "bottom_left": "top_right"
-        }
 
         for direction, neighbor in bubble.neighbors.items():
             if neighbor:
-                neighbor.neighbors[reverse[direction]] = None
+                neighbor.neighbors[REVERSE_DIR[direction]] = None
         bubble.neighbors = {k: None for k in bubble.neighbors}
         self.bubbles[row][col] = None
         bubble.cell = None
@@ -159,13 +150,12 @@ class BubbleGrid:
     
     def get_neighbor_coords(self, row, col):
         if self.is_flush_left(row):
-            directions = [(-1, -1), (-1, 0), (0, -1), (0, 1), (1, -1), (1, 0)]
+            dir_vectors = [(-1, -1), (-1, 0), (0, -1), (0, 1), (1, -1), (1, 0)]
         else:
-            directions = [(-1, 0), (-1, 1), (0, -1), (0, 1), (1, 0), (1, 1)]
+            dir_vectors = [(-1, 0), (-1, 1), (0, -1), (0, 1), (1, 0), (1, 1)]
             
-        names = ["top_left", "top_right", "left", "right", "bottom_left", "bottom_right"]
         result = []
-        for (dr, dc), name in zip(directions, names):
+        for (dr, dc), name in zip(dir_vectors, DIRECTIONS):
             n_row, n_col = row + dr, col + dc
             if 0 <= n_row < self.rows and 0 <= n_col < self.cols:
                 result.append((name, n_row, n_col))
@@ -191,7 +181,6 @@ class BubbleGrid:
         return closest_cell
     
     def get_snap_cell(self, row: int, col: int, target_pos: pygame.Vector2) -> tuple[int, int] | None:
-        #print(f"Snapping bubble to cell at row={row}, col={col} with target_pos={target_pos}")
         if not (0 <= row < self.rows and 0 <= col < self.cols):
             return None  # bubble stopped outside grid → game over
 
@@ -237,15 +226,8 @@ class BubbleGrid:
             neighbor = self.bubbles[n_row][n_col]
             if neighbor:
                 bubble.neighbors[direction] = neighbor
-                reverse_direction = {
-                    "left": "right",
-                    "right": "left",
-                    "top_left": "bottom_right",
-                    "top_right": "bottom_left",
-                    "bottom_left": "top_right",
-                    "bottom_right": "top_left"
-                }[direction]
-                neighbor.neighbors[reverse_direction] = bubble
+                reverse_dir = REVERSE_DIR[direction]
+                neighbor.neighbors[reverse_dir] = bubble
         DEBUG = False
         if DEBUG:
             print(f"Added bubble at ({row}, {col})")
