@@ -39,7 +39,15 @@ POP_X = (SCREEN_WIDTH - POP_W) // 2          # 331
 POP_Y = (SCREEN_HEIGHT - POP_H) // 2          # 290
 
 WIDGET_ASSETS = [
-("widget", "assets/sprites/widget.png")
+("widget", "assets/sprites/widget.png"),
+("previous", "assets/sprites/previous_btn.png"),
+("next", "assets/sprites/next_btn.png"),
+("previous_hover", "assets/sprites/previous_btn_hover.png"),
+("next_hover", "assets/sprites/next_btn_hover.png"),
+("play", "assets/sprites/play_btn.png"),
+("play_hover", "assets/sprites/play_btn_hover.png"),
+("pause", "assets/sprites/pause_btn.png"),
+("pause_hover", "assets/sprites/pause_btn_hover.png")
 ]
 
 WIDGET_W, WIDGET_H = 500, 175

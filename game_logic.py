@@ -45,12 +45,22 @@ class Bubble:
                 return True
 
         return False
+    
+    def first_colliding_cell(self, grid):
+        row, col = grid.get_cell_for_position(*self.pos)
+        for _, r, c in grid.get_neighbor_coords(row, col):
+            other = grid.bubbles[r][c]
+            if other and (self.pos - other.pos).length_squared() <= (2*(self.radius-2))**2:
+                return r, c
+        return row, col   
 
     def move(self, delta_time, grid):
         self.pos += self.velocity * delta_time
 
         if self.check_collision_with_neighbors(grid):
+            self.pos -= self.velocity * delta_time
             self.velocity = pygame.Vector2(0, 0)
+            self.hit_cell = self.first_colliding_cell(grid)
             return
 
         if self.pos.x - self.radius <= GRID_LEFT_OFFSET or self.pos.x + self.radius >= GRID_LEFT_OFFSET + FIELD_DRAW_WIDTH:
@@ -60,7 +70,7 @@ class Bubble:
 
         if self.pos.y - self.radius <= GRID_TOP_OFFSET:
             self.velocity = pygame.Vector2(0, 0)
-            self.pos.y = GRID_TOP_OFFSET + self.radius
+            self.pos.y = GRID_TOP_OFFSET + ROW_HEIGHT//2
 
 class BubbleGrid:
     def __init__(self, cols=GRID_COLS, rows=GRID_ROWS):
@@ -180,35 +190,28 @@ class BubbleGrid:
 
         return closest_cell
     
-    def get_snap_cell(self, row: int, col: int, target_pos: pygame.Vector2) -> tuple[int, int] | None:
-        if not (0 <= row < self.rows and 0 <= col < self.cols):
-            return None  # bubble stopped outside grid → game over
-
-        if self.bubbles[row][col] is None:
-            return (row, col)
-
-        neighbors = [(r, c) for _, r, c in self.get_neighbor_coords(row, col)]
-        return self.find_closest_valid_cell(target_pos, neighbors)
-    
     def snap_bubble_to_grid(self, bubble, hit_row=None, hit_col=None):
-        if hit_row is not None and hit_col is not None:    
-            neighbors = []
-            for _, row, col in self.get_neighbor_coords(hit_row, hit_col):
-                neighbors.append((row, col))
-
-            closest_cell = self.find_closest_valid_cell(bubble.pos, neighbors)
-            if closest_cell is None:
-                print(f"⚠️ No valid cell found for bubble at {bubble.pos}")
-                return False #Game Over
-            
+        if hit_row is None or hit_col is None:
+            anchor_row, anchor_col = self.get_cell_for_position(*bubble.pos)
         else:
-            closest_cell = self.get_cell_for_position(*bubble.pos)
-            if not (0 <= closest_cell[0] < self.rows and 0 <= closest_cell[1] < self.cols):
-                return False  # Out-of-bounds = game over or invalid
+            anchor_row, anchor_col = hit_row, hit_col
 
-        bubble.pos = self.get_position_for_cell(*closest_cell)
+        if not (0 <= anchor_row < self.rows and 0 <= anchor_col < self.cols):
+            return None
+        
+        candidates = [(anchor_row, anchor_col)]
+        candidates += [(r, c) for _, r, c
+                    in self.get_neighbor_coords(anchor_row, anchor_col)]
+        
+        self._debug_snap_info(anchor_row, anchor_col, bubble.pos)
+
+        target = self.find_closest_valid_cell(bubble.pos, candidates)
+        if target is None:
+            return None
+
+        bubble.pos = self.get_position_for_cell(*target)
         self.add_bubble(bubble)
-        return True
+        return target
 
     def add_bubble(self, bubble):
         row, col = self.get_cell_for_position(*bubble.pos)
@@ -309,7 +312,6 @@ class BubbleGrid:
         # After insertion, relink neighbors
         self.row_offset = not self.row_offset
         self.update_all_bubbles()
-        #self.pending_floater_check = True
         return True
     
     def register_non_clearing_shot(self) -> bool:
@@ -360,6 +362,21 @@ class BubbleGrid:
                         neighbor = self.bubbles[n_row][n_col]
                         if neighbor:
                             bubble.neighbors[direction] = neighbor
+
+    def _debug_snap_info(self, anchor_row, anchor_col,
+                         bubble_pos, DEBUG_SNAP = False):
+        """Console dump of neighbour cells and centre-to-centre distance."""
+        if not DEBUG_SNAP:
+            return
+
+        print(f"\n[DBG] anchor ({anchor_row},{anchor_col})"
+            f"  bubble-stop @ {bubble_pos}")
+
+        for name, r, c in self.get_neighbor_coords(anchor_row, anchor_col):
+            centre = self.get_position_for_cell(r, c)
+            dist   = (centre - bubble_pos).length()
+            occ    = "OCC" if self.bubbles[r][c] else "   "
+            print(f"  {name:<13} cell=({r:2},{c:2})  {occ}  dist={dist:6.1f}")
 
 def compute_velocity(start_pos, target_pos, speed):
     direction = pygame.Vector2(target_pos) - pygame.Vector2(start_pos)

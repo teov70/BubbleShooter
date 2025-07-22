@@ -120,3 +120,9 @@ class Button:
     # ----------------------------------------------------------
     def is_hovered(self) -> bool: return self._hovered
     def is_clicked(self) -> bool: return self._clicked
+
+#__________________DEBUG______________________
+def draw_mouse_coords(screen, pos, font, DEBUG = False):
+    if not DEBUG: return
+    txt = font.render(f"x:{pos[0]}  y:{pos[1]}", True, (0, 0, 0))
+    screen.blit(txt, (10, 10))      # top-left corner

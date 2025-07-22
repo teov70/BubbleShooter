@@ -20,11 +20,12 @@ class Game:
         self.widget_assets = load_widget_surfaces()
         init_audio()
         self.fonts = {"text": pygame.font.Font("assets/Arcade.ttf", 27),
-                      "score": pygame.font.Font("assets/Arcade.ttf", 52)}
+                      "score": pygame.font.Font("assets/Arcade.ttf", 52),
+                      "debug": pygame.font.Font(None, 24)}
 
-        #________________Game Over Popup_________________
+        #________________Popup_________________
         self.popup_img = self.popup_assets["popup"]
-        self.buttons = {
+        self.popup_buttons = {
             "yes":Button(self.popup_assets["yes"], self.popup_assets["yes_hover"], (POP_X, POP_Y)),
             "quit":Button(self.popup_assets["quit"], self.popup_assets["quit_hover"], (POP_X, POP_Y)),
             "cross":Button(self.popup_assets["cross"], self.popup_assets["cross_hover"], (POP_X, POP_Y)),
@@ -32,6 +33,12 @@ class Game:
 
         #________________Widget_________________
         self.widget_img = self.widget_assets["widget"]
+        self.widget_buttons = {
+            "previous":Button(self.widget_assets["previous"], self.widget_assets["previous_hover"], (WIDGET_X, WIDGET_Y)),
+            "next":Button(self.widget_assets["next"], self.widget_assets["next_hover"], (WIDGET_X, WIDGET_Y)),
+            "play":Button(self.widget_assets["play"], self.widget_assets["play_hover"], (WIDGET_X, WIDGET_Y)),
+            "pause":Button(self.widget_assets["pause"], self.widget_assets["pause_hover"], (WIDGET_X, WIDGET_Y))
+        }
 
         self.running = True
         self.restart_game()
@@ -68,28 +75,28 @@ class Game:
             mouse_lmb = pygame.mouse.get_pressed()[0]
 
             if not self.game_over:
-                # Shoot self.bubble
+                # Shoot bubble
                 if self.should_shoot(mouse_pos, click_frame):
                     self.bubble.velocity = compute_velocity(self.bubble.pos, mouse_pos, PROJECTILE_SPEED)
                     self.bubble_ready = False
 
-                # Move active self.bubble
+                # Move active bubble
                 if self.bubble is not None:
                     self.bubble.move(self.clock.get_time() / 1000, self.grid)
 
-                    # snap to cell when it stops and add it to self.grid
+                    # snap to cell when it stops and add it to grid
                     if self.bubble.velocity.length_squared() == 0 and not self.bubble_ready:
-                        row, col   = self.grid.get_cell_for_position(*self.bubble.pos)
-                        snap_cell  = self.grid.get_snap_cell(row, col, self.bubble.pos)
-                        if snap_cell is None:
+                        hit_r, hit_c = getattr(self.bubble, "hit_cell", (None, None))
+                        placed_cell = self.grid.snap_bubble_to_grid(self.bubble, hit_r, hit_c)
+                        if placed_cell is None:
                             self.game_over = True
                         else:
-                            self.bubble.pos = self.grid.get_position_for_cell(*snap_cell)
-                            self.grid.add_bubble(self.bubble)
-
-                            # match-3 detection → enqueue pops (floaters handled inside self.grid)
-                            match_chain = self.grid.get_connected_same_color(*snap_cell)
+                            # match-3 detection → enqueue pops (floaters handled inside grid)
+                            match_chain = self.grid.get_connected_same_color(*placed_cell)
                             self.game_over = not self.grid.destroy_bubbles(match_chain)
+
+                        if hasattr(self.bubble, "hit_cell"):
+                            delattr(self.bubble, "hit_cell")
 
                         self.bubble = None
                         self.bubble_ready = False
@@ -107,18 +114,23 @@ class Game:
 
             else:
                 # Update buttons
-                for btn in self.buttons.values():
+                for btn in self.popup_buttons.values():
                     btn.update(mouse_pos, mouse_lmb)
 
                 # React to clicks
-                if self.buttons["yes"].is_clicked():
+                if self.popup_buttons["yes"].is_clicked():
                     self.restart_game()
-                elif  self.buttons["quit"].is_clicked() or self.buttons["cross"].is_clicked():
+                elif  self.popup_buttons["quit"].is_clicked() or self.popup_buttons["cross"].is_clicked():
                     self.running = False
+
+            for btn in self.widget_buttons.values():
+                    btn.update(mouse_pos, mouse_lmb)
 
             # _________ drawing _________
             self.screen.blit(self.bg_img, (0, 0))
             self.screen.blit(self.widget_img, (WIDGET_X, WIDGET_Y))
+            for btn in self.widget_buttons.values():
+                    btn.draw(self.screen)
             draw_game_field(self.screen)
             draw_bubble_bar(self.screen)
             self.grid.draw(self.screen)
@@ -133,8 +145,10 @@ class Game:
 
             if self.game_over:
                 self.screen.blit(self.popup_img, (POP_X, POP_Y))
-                for btn in self.buttons.values():
+                for btn in self.popup_buttons.values():
                     btn.draw(self.screen)
+
+            draw_mouse_coords(self.screen, mouse_pos, self.fonts["debug"])
 
             pygame.display.flip()
             self.clock.tick(FPS)
