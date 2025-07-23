@@ -4,6 +4,7 @@ import random
 from config import *
 from game_logic import *
 from game_view import *
+from audio import AudioManager
 
 class Game:
     def __init__(self): 
@@ -18,7 +19,8 @@ class Game:
         self.bg_img = pygame.transform.scale(self.bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.popup_assets = load_popup_surfaces()
         self.widget_assets = load_widget_surfaces()
-        init_audio()
+        self.audio = AudioManager()
+
         self.fonts = {"text": pygame.font.Font("assets/Arcade.ttf", 27),
                       "score": pygame.font.Font("assets/Arcade.ttf", 52),
                       "debug": pygame.font.Font(None, 24)}
@@ -46,7 +48,7 @@ class Game:
     #___________________ helpers ____________________
     def restart_game(self):
         """Reset full game state: self.grid, shooter, preview, counters."""
-        self.grid = BubbleGrid()
+        self.grid = BubbleGrid(audio=self.audio)
         self.grid.populate_random_rows()
         self.bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(SHOOTER_X, SHOOTER_Y))
         self.next_bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(PREVIEW_X, PREVIEW_Y))
@@ -66,9 +68,11 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     click_frame = True
                     click_pos = event.pos
+                elif event.type == self.audio.NEXT_EVENT:
+                    self.audio.next()
 
             # 2. INPUT SNAPSHOT _________________________________________
             mouse_pos = pygame.mouse.get_pos()
@@ -123,18 +127,32 @@ class Game:
                 elif  self.popup_buttons["quit"].is_clicked() or self.popup_buttons["cross"].is_clicked():
                     self.running = False
 
-            for btn in self.widget_buttons.values():
-                    btn.update(mouse_pos, mouse_lmb)
+            self.widget_buttons["previous"].update(mouse_pos, mouse_lmb)
+            self.widget_buttons["next"].update(mouse_pos, mouse_lmb)
+            toggle_btn = self.widget_buttons["play"] if self.audio.is_paused() \
+                    else self.widget_buttons["pause"]
+            toggle_btn.update(mouse_pos, mouse_lmb)
+
+            if click_frame and toggle_btn.is_clicked():
+                self.audio.toggle()
+
+            elif self.widget_buttons["next"].is_clicked():
+                self.audio.next()
+
+            elif self.widget_buttons["previous"].is_clicked():
+                self.audio.previous()
 
             # _________ drawing _________
             self.screen.blit(self.bg_img, (0, 0))
             self.screen.blit(self.widget_img, (WIDGET_X, WIDGET_Y))
-            for btn in self.widget_buttons.values():
-                    btn.draw(self.screen)
             draw_game_field(self.screen)
-            draw_bubble_bar(self.screen)
             self.grid.draw(self.screen)
 
+            self.widget_buttons["previous"].draw(self.screen)
+            self.widget_buttons["next"].draw(self.screen)
+            toggle_btn.draw(self.screen)
+
+            draw_bubble_bar(self.screen)
             if self.bubble is not None:
                 self.bubble.draw(self.screen)
                 self.next_bubble.draw(self.screen)

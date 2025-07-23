@@ -14,14 +14,6 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (128, 128, 128)
 
-# Sounds
-POP_SOUND_PATHS = [
-    "assets/sounds/pop_1.wav",
-    "assets/sounds/pop_2.wav",
-    "assets/sounds/pop_3.wav"
-]
-PLOP_SOUND_PATH = "assets/sounds/plop.wav"
-
 # Game Over Popup
 GAME_OVER_ASSETS = [
 ("popup", "assets/sprites/game_over.png"),
@@ -95,3 +87,16 @@ SHOOTER_X = GRID_LEFT_OFFSET + FIELD_WIDTH // 2
 #Preview
 PREVIEW_Y = GRID_TOP_OFFSET + FIELD_HEIGHT + 2.5*ROW_HEIGHT
 PREVIEW_X = GRID_LEFT_OFFSET + COL_WIDTH*0.5
+
+# Sounds and music
+POP_SOUND_PATHS = [
+    "assets/sounds/pop_1.wav",
+    "assets/sounds/pop_2.wav",
+    "assets/sounds/pop_3.wav"
+]
+PLOP_SOUND_PATH = "assets/sounds/plop.wav"
+TRACKS = ["assets/sounds/cloud_jumper.ogg",
+         "assets/sounds/lotus_waters.ogg",
+         "assets/sounds/lease-extended.ogg",
+         "assets/sounds/my-chemical-romance-na-na-na.ogg"]
+

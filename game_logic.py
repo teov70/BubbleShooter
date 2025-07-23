@@ -73,7 +73,8 @@ class Bubble:
             self.pos.y = GRID_TOP_OFFSET + ROW_HEIGHT//2
 
 class BubbleGrid:
-    def __init__(self, cols=GRID_COLS, rows=GRID_ROWS):
+    def __init__(self, audio, cols=GRID_COLS, rows=GRID_ROWS):
+        self.audio = audio
         self.rows = rows
         self.cols = cols
         self.bubbles = [[None] * self.cols for _ in range(self.rows)]
@@ -109,7 +110,7 @@ class BubbleGrid:
 
     def destroy_bubbles(self, match_chain: list[tuple[int, int]]):
         if len(match_chain) < 3:
-            play_plop_sound()
+            self.audio.play_plop()
             return self.register_non_clearing_shot()
         
         n = len(match_chain)
@@ -339,7 +340,7 @@ class BubbleGrid:
         while self.pop_queue and now >= self.next_pop_time:
             bubble = self.pop_queue.pop(0)
             self.remove_bubble(bubble)
-            play_pop_sound()
+            self.audio.play_pop()
             self.next_pop_time += self.pop_interval
 
         # when chain finished and floaters still pending

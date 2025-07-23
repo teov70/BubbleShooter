@@ -5,32 +5,8 @@ import random
 
 _POPUP_SURFACES = None
 _WIDGET_SURFACES = None
-POP_SOUNDS = []
-PLOP_SOUND = None
 _cached_field_surf = None
 _cached_bar_surf = None
-
-def init_audio():
-    global POP_SOUNDS, PLOP_SOUND
-
-    pygame.mixer.init()
-    pygame.mixer.music.load("assets/sounds/frutigeraeromusic.ogg")
-    #pygame.mixer.music.load("assets/sounds/lotus_waters.ogg")
-    pygame.mixer.music.set_volume(0.4)
-    pygame.mixer.music.play(loops=-1)
-
-    POP_SOUNDS = [pygame.mixer.Sound(path) for path in POP_SOUND_PATHS]
-    for s in POP_SOUNDS:
-        s.set_volume(0.5)
-
-    PLOP_SOUND = pygame.mixer.Sound(PLOP_SOUND_PATH)
-    PLOP_SOUND.set_volume(1)
-
-def play_pop_sound():
-    random.choice(POP_SOUNDS).play()
-
-def play_plop_sound():
-    PLOP_SOUND.play()
 
 def draw_game_field(screen):
     global _cached_field_surf
