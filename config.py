@@ -5,7 +5,7 @@ from math import sqrt
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
 TOOLBAR_HEIGHT = 100
-FPS = 144
+FPS = 120
 
 PROJECTILE_SPEED = 500
 
@@ -39,7 +39,11 @@ WIDGET_ASSETS = [
 ("play", "assets/sprites/play_btn.png"),
 ("play_hover", "assets/sprites/play_btn_hover.png"),
 ("pause", "assets/sprites/pause_btn.png"),
-("pause_hover", "assets/sprites/pause_btn_hover.png")
+("pause_hover", "assets/sprites/pause_btn_hover.png"),
+("replay", "assets/sprites/replay_btn.png"),
+("replay_hover", "assets/sprites/replay_btn_hover.png"),
+("replay1", "assets/sprites/replay_btn1.png"),
+("replay1_hover", "assets/sprites/replay_btn1_hover.png"),
 ]
 
 WIDGET_W, WIDGET_H = 500, 175
@@ -60,7 +64,7 @@ BUBBLE_COLOR_PAIRS = [
 
 BUBBLE_COLORS = [color for color, name in BUBBLE_COLOR_PAIRS if name != "gray"]
 
-STARTING_ROWS = 11
+STARTING_ROWS = 10
 # Grid
 GRID_TOP_OFFSET = 50
 GRID_LEFT_OFFSET = 50
@@ -89,6 +93,7 @@ PREVIEW_Y = GRID_TOP_OFFSET + FIELD_HEIGHT + 2.5*ROW_HEIGHT
 PREVIEW_X = GRID_LEFT_OFFSET + COL_WIDTH*0.5
 
 # Sounds and music
+CLICK_SOUND_PATH = "assets/sounds/click.wav"
 POP_SOUND_PATHS = [
     "assets/sounds/pop_1.wav",
     "assets/sounds/pop_2.wav",

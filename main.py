@@ -39,7 +39,9 @@ class Game:
             "previous":Button(self.widget_assets["previous"], self.widget_assets["previous_hover"], (WIDGET_X, WIDGET_Y)),
             "next":Button(self.widget_assets["next"], self.widget_assets["next_hover"], (WIDGET_X, WIDGET_Y)),
             "play":Button(self.widget_assets["play"], self.widget_assets["play_hover"], (WIDGET_X, WIDGET_Y)),
-            "pause":Button(self.widget_assets["pause"], self.widget_assets["pause_hover"], (WIDGET_X, WIDGET_Y))
+            "pause":Button(self.widget_assets["pause"], self.widget_assets["pause_hover"], (WIDGET_X, WIDGET_Y)),
+            "replay":Button(self.widget_assets["replay"], self.widget_assets["replay_hover"], (WIDGET_X, WIDGET_Y)),
+            "replay1":Button(self.widget_assets["replay1"], self.widget_assets["replay1_hover"], (WIDGET_X, WIDGET_Y))
         }
 
         self.running = True
@@ -47,7 +49,7 @@ class Game:
 
     #___________________ helpers ____________________
     def restart_game(self):
-        """Reset full game state: self.grid, shooter, preview, counters."""
+        """Reset full game state: grid, shooter, preview, counters."""
         self.grid = BubbleGrid(audio=self.audio)
         self.grid.populate_random_rows()
         self.bubble = Bubble(color=random.choice(BUBBLE_COLORS), pos=(SHOOTER_X, SHOOTER_Y))
@@ -72,7 +74,10 @@ class Game:
                     click_frame = True
                     click_pos = event.pos
                 elif event.type == self.audio.NEXT_EVENT:
-                    self.audio.next()
+                    if self.audio.loop == 0:
+                        self.audio.next()
+                    else: 
+                        self.audio.replay()
 
             # 2. INPUT SNAPSHOT _________________________________________
             mouse_pos = pygame.mouse.get_pos()
@@ -123,8 +128,10 @@ class Game:
 
                 # React to clicks
                 if self.popup_buttons["yes"].is_clicked():
+                    self.audio.play_click()
                     self.restart_game()
                 elif  self.popup_buttons["quit"].is_clicked() or self.popup_buttons["cross"].is_clicked():
+                    self.audio.play_click()
                     self.running = False
 
             self.widget_buttons["previous"].update(mouse_pos, mouse_lmb)
@@ -133,13 +140,24 @@ class Game:
                     else self.widget_buttons["pause"]
             toggle_btn.update(mouse_pos, mouse_lmb)
 
+            toggle_replay = self.widget_buttons["replay"] if self.audio.loop == -1 \
+                    else self.widget_buttons["replay1"]
+            toggle_replay.update(mouse_pos, mouse_lmb)
+
             if click_frame and toggle_btn.is_clicked():
+                self.audio.play_click()
                 self.audio.toggle()
 
+            elif click_frame and toggle_replay.is_clicked():
+                self.audio.play_click()
+                self.audio.toggle_loop()
+
             elif self.widget_buttons["next"].is_clicked():
+                self.audio.play_click()
                 self.audio.next()
 
             elif self.widget_buttons["previous"].is_clicked():
+                self.audio.play_click()
                 self.audio.previous()
 
             # _________ drawing _________
@@ -151,6 +169,7 @@ class Game:
             self.widget_buttons["previous"].draw(self.screen)
             self.widget_buttons["next"].draw(self.screen)
             toggle_btn.draw(self.screen)
+            toggle_replay.draw(self.screen)
 
             draw_bubble_bar(self.screen)
             if self.bubble is not None:

@@ -39,6 +39,12 @@ def draw_warning_bubbles(screen, remaining: int, preview_pos: tuple[int, int], b
         gray = bubble_cls(color=GRAY, pos=(x, y))
         gray.draw(screen)
 
+def load_bubble_surfaces(color_pairs):
+    return {
+        color: pygame.image.load(f"assets/sprites/bubble_{name}.png").convert_alpha()
+        for color, name in color_pairs
+    }
+
 def load_popup_surfaces():
     global _POPUP_SURFACES
     if _POPUP_SURFACES is None:
