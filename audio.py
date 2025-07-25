@@ -8,7 +8,7 @@ class AudioManager:
         self.playlist = TRACKS
         self.playlist_len = len(TRACKS)
         self.track_num = 0
-        self.loop = -1
+        self.loop = True
         pygame.mixer.music.load(self.playlist[self.track_num])
         pygame.mixer.music.set_volume(0.5)
         pygame.mixer.music.play()
@@ -45,7 +45,7 @@ class AudioManager:
         pygame.mixer.music.pause() if pygame.mixer.music.get_busy() else pygame.mixer.music.unpause()
 
     def toggle_loop(self):
-        self.loop = -1 if self.loop == 0 else 0
+        self.loop = not self.loop
 
     def next(self):
         self.track_num = (self.track_num + 1) % self.playlist_len

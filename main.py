@@ -140,7 +140,7 @@ class Game:
                     else self.widget_buttons["pause"]
             toggle_btn.update(mouse_pos, mouse_lmb)
 
-            toggle_replay = self.widget_buttons["replay"] if self.audio.loop == -1 \
+            toggle_replay = self.widget_buttons["replay"] if self.audio.loop \
                     else self.widget_buttons["replay1"]
             toggle_replay.update(mouse_pos, mouse_lmb)
 
@@ -164,7 +164,7 @@ class Game:
             self.screen.blit(self.bg_img, (0, 0))
             self.screen.blit(self.widget_img, (WIDGET_X, WIDGET_Y))
             draw_game_field(self.screen)
-            self.grid.draw(self.screen)
+            draw_bubble_grid(self.screen, self.grid)
 
             self.widget_buttons["previous"].draw(self.screen)
             self.widget_buttons["next"].draw(self.screen)
@@ -172,9 +172,9 @@ class Game:
             toggle_replay.draw(self.screen)
 
             draw_bubble_bar(self.screen)
-            if self.bubble is not None:
-                self.bubble.draw(self.screen)
-                self.next_bubble.draw(self.screen)
+            if self.bubble:
+                draw_bubble(self.screen, self.bubble)
+                draw_bubble(self.screen, self.next_bubble)
 
             remaining_shots = max(0, self.grid.non_clearing_threshold - self.grid.non_clearing_count)
             draw_warning_bubbles(self.screen, remaining_shots, (PREVIEW_X, PREVIEW_Y), Bubble)

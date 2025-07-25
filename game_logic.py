@@ -1,10 +1,8 @@
 # game_logic.py
 import pygame
 from config import *
-from game_view import *
+#from game_view import *
 import random as rand
-
-BUBBLE_SURFACES: dict = {}
 
 class Bubble:
     def __init__(self, color, pos, velocity=pygame.Vector2(0, 0), radius=BUBBLE_RADIUS):
@@ -14,15 +12,6 @@ class Bubble:
         self.velocity = pygame.Vector2(velocity)
         self.cell = None
         self.neighbors = {direction : None for direction in DIRECTIONS}
-       
-    def draw(self, screen):
-        global BUBBLE_SURFACES
-        if not BUBBLE_SURFACES:
-            BUBBLE_SURFACES = load_bubble_surfaces(BUBBLE_COLOR_PAIRS)
-
-        img = BUBBLE_SURFACES[self.color]
-        rect = img.get_rect(center=self.pos)
-        screen.blit(img, rect)
 
     def check_collision_with_neighbors(self, grid):
         row, col = grid.get_cell_for_position(*self.pos)
@@ -87,12 +76,6 @@ class BubbleGrid:
         self.score = 0      # total points
         self._floaters_scoring = False   # flag: next enqueue_floating_bubbles gives points
         self.row_offset = False
-
-    def draw(self, screen):
-        for row in self.bubbles:
-            for bubble in row:
-                if bubble is not None:
-                    bubble.draw(screen)
 
     def remove_bubble(self, bubble):
         if not bubble.cell:

@@ -3,6 +3,7 @@ import pygame
 from config import *
 import random
 
+_BUBBLE_SURFACES = None
 _POPUP_SURFACES = None
 _WIDGET_SURFACES = None
 _cached_field_surf = None
@@ -14,6 +15,17 @@ def draw_game_field(screen):
         _cached_field_surf = pygame.Surface((FIELD_DRAW_WIDTH, FIELD_HEIGHT), pygame.SRCALPHA)
         pygame.draw.rect(_cached_field_surf, FIELD_COLOR, _cached_field_surf.get_rect(), border_radius=20)
     screen.blit(_cached_field_surf, (GRID_LEFT_OFFSET, GRID_TOP_OFFSET))
+
+def draw_bubble(screen, bubble):
+    surf = load_bubble_surfaces(BUBBLE_COLOR_PAIRS)[bubble.color]
+    screen.blit(surf, surf.get_rect(center=bubble.pos))
+
+def draw_bubble_grid(screen, grid):
+    """Iterate grid and draw every occupied cell."""
+    for row in grid.bubbles:
+        for bubble in row:
+            if bubble:
+                draw_bubble(screen, bubble)
 
 def draw_score(screen, score, fonts):
         text_surf = fonts["text"].render(f"Score", True, (255, 255, 255))
@@ -37,13 +49,16 @@ def draw_warning_bubbles(screen, remaining: int, preview_pos: tuple[int, int], b
     for i in range(remaining-1):
         x = base_x + i * bubble_spacing
         gray = bubble_cls(color=GRAY, pos=(x, y))
-        gray.draw(screen)
+        draw_bubble(screen, gray)
 
 def load_bubble_surfaces(color_pairs):
-    return {
-        color: pygame.image.load(f"assets/sprites/bubble_{name}.png").convert_alpha()
-        for color, name in color_pairs
-    }
+    global _BUBBLE_SURFACES
+    if _BUBBLE_SURFACES is None:
+        _BUBBLE_SURFACES = {
+            color: pygame.image.load(f"assets/sprites/bubble_{name}.png").convert_alpha()
+            for color, name in color_pairs
+        }
+    return _BUBBLE_SURFACES
 
 def load_popup_surfaces():
     global _POPUP_SURFACES
