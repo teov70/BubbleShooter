@@ -1,11 +1,11 @@
 # game_logic.py
 import pygame
 from config import *
-#from game_view import *
 import random as rand
 
 class Bubble:
     def __init__(self, color, pos, velocity=pygame.Vector2(0, 0), radius=BUBBLE_RADIUS):
+        """Create a bubble with color, position, velocity, radius and empty neighbour map."""
         self.color = color
         self.radius = radius
         self.pos = pygame.Vector2(pos)       # Accepts tuple or Vector2
@@ -13,7 +13,8 @@ class Bubble:
         self.cell = None
         self.neighbors = {direction : None for direction in DIRECTIONS}
 
-    def check_collision_with_neighbors(self, grid):
+    def check_collision_with_neighbors(self, grid) -> bool:
+        """Return True if this bubble overlaps any neighbour or its own cell area."""
         row, col = grid.get_cell_for_position(*self.pos)
         collision_radius_sq = (2 * (self.radius-2)) ** 2
 
@@ -35,6 +36,7 @@ class Bubble:
         return False
     
     def first_colliding_cell(self, grid):
+        """Locate the first grid cell whose bubble collides with this one."""
         row, col = grid.get_cell_for_position(*self.pos)
         for _, r, c in grid.get_neighbor_coords(row, col):
             other = grid.bubbles[r][c]
@@ -43,13 +45,14 @@ class Bubble:
         return row, col   
 
     def move(self, delta_time, grid):
+        """Advance bubble by velocity, reflect or stop on wall / collision, and mark hit cell."""
         self.pos += self.velocity * delta_time
 
         if self.check_collision_with_neighbors(grid):
             self.pos -= self.velocity * delta_time
             self.velocity = pygame.Vector2(0, 0)
             self.hit_cell = self.first_colliding_cell(grid)
-            return
+            return None
 
         if self.pos.x - self.radius <= GRID_LEFT_OFFSET or self.pos.x + self.radius >= GRID_LEFT_OFFSET + FIELD_DRAW_WIDTH:
             self.velocity.x *= -1
@@ -62,22 +65,24 @@ class Bubble:
 
 class BubbleGrid:
     def __init__(self, audio, cols=GRID_COLS, rows=GRID_ROWS):
+        """Prepare empty grid, state counters, score, audio link and pop-animation queue."""
         self.audio = audio
         self.rows = rows
         self.cols = cols
         self.bubbles = [[None] * self.cols for _ in range(self.rows)]
 
         self.pop_queue: list[Bubble] = []   # bubbles waiting to pop
-        self.pop_interval = 100             # ms between pops
+        self.pop_interval = 100
         self.next_pop_time = 0              # timestamp of next pop
         self.pending_floater_check = False  # run floater DFS when chain gone
-        self.non_clearing_count = 0      # shots since last auto-row
-        self.non_clearing_threshold  = 6
-        self.score = 0      # total points
-        self._floaters_scoring = False   # flag: next enqueue_floating_bubbles gives points
-        self.row_offset = False
+        self.non_clearing_count = 0         # shots since last row addition
+        self.non_clearing_threshold  = 5
+        self.score = 0
+        self._floaters_scoring = False      # flag: next enqueue_floating_bubbles gives points
+        self.row_offset = False             # flag: indicates if the first row should be flush left or right
 
     def remove_bubble(self, bubble):
+        """Detach bubble from grid and neighbour links, leaving its cell empty."""
         if not bubble.cell:
             print("⚠️ Tried to remove bubble without valid cell")
             return
@@ -91,6 +96,7 @@ class BubbleGrid:
         bubble.cell = None
 
     def destroy_bubbles(self, match_chain: list[tuple[int, int]]):
+        """Score and enqueue a colour-match chain; play plop if chain too short."""
         if len(match_chain) < 3:
             self.audio.play_plop()
             return self.register_non_clearing_shot()
@@ -114,9 +120,11 @@ class BubbleGrid:
         return True
     
     def is_flush_left(self, row: int) -> bool:
+        """Return True when the given row starts flush left (not offset)."""
         return (row % 2 == 0) != self.row_offset
 
     def get_cell_for_position(self, x, y) -> tuple[int, int]:
+        """Map screen (x, y) coordinates to nearest grid row, col within bounds."""
         row = int((y - GRID_TOP_OFFSET) // ROW_HEIGHT)
         if self.is_flush_left(row):
             col = int((x - GRID_LEFT_OFFSET) // COL_WIDTH)
@@ -126,6 +134,7 @@ class BubbleGrid:
         return row, col
     
     def get_position_for_cell(self, row: int, col: int) -> pygame.Vector2:
+        """Get the center of the cell at row, col."""
         y = GRID_TOP_OFFSET + (row + 0.5) * ROW_HEIGHT
         if self.is_flush_left(row):
             x = GRID_LEFT_OFFSET + (col + 0.5) * COL_WIDTH
@@ -134,6 +143,7 @@ class BubbleGrid:
         return pygame.Vector2(x, y)
     
     def populate_random_rows(self, num_rows=STARTING_ROWS, colors=BUBBLE_COLORS):
+        """Fill the top part of the grid with random-colour bubbles."""
         for row in range(num_rows):
             for col in range(self.cols):
                 pos = self.get_position_for_cell(row, col)
@@ -142,6 +152,7 @@ class BubbleGrid:
                 self.add_bubble(bubble)
     
     def get_neighbor_coords(self, row, col):
+        """Yields 6 neighbour coordinates with direction names for a cell."""
         if self.is_flush_left(row):
             dir_vectors = [(-1, -1), (-1, 0), (0, -1), (0, 1), (1, -1), (1, 0)]
         else:
@@ -155,6 +166,7 @@ class BubbleGrid:
         return result
     
     def find_closest_valid_cell(self, target_pos, candidate_cells):
+        """Pick nearest empty candidate cell to a target position."""
         closest_cell = None
         min_dist_sq = float('inf')
 
@@ -174,6 +186,7 @@ class BubbleGrid:
         return closest_cell
     
     def snap_bubble_to_grid(self, bubble, hit_row=None, hit_col=None):
+        """Attach a moving bubble to its final grid cell and return that cell."""
         if hit_row is None or hit_col is None:
             anchor_row, anchor_col = self.get_cell_for_position(*bubble.pos)
         else:
@@ -197,6 +210,7 @@ class BubbleGrid:
         return target
 
     def add_bubble(self, bubble):
+        """Place bubble in grid, set its cell, relink neighbours; ignore out-of-bounds."""
         row, col = self.get_cell_for_position(*bubble.pos)
 
         if not (0 <= row < self.rows and 0 <= col < self.cols):
@@ -222,7 +236,7 @@ class BubbleGrid:
                     print(f" - {k}: neighbor exists")
 
     def get_connected_same_color(self, start_row, start_col):
-        """Recursive function using DFS to find all connected bubbles of the same color."""
+        """Depth-first search to collect all connected bubbles of identical colour."""
         visited = set()
         result = []
 
@@ -248,10 +262,8 @@ class BubbleGrid:
         return result
     
     def enqueue_floating_bubbles(self):
-        """Find bubbles not connected to the top row and enqueue them for destruction."""
+        """Mark and enqueue bubbles not connected to top row for popping and scoring."""
         visited: set[tuple[int, int]] = set()
-
-        # mark all bubbles reachable from the top row
         def dfs(row, col):
             if (row, col) in visited:
                 return
@@ -260,12 +272,11 @@ class BubbleGrid:
                 if self.bubbles[r2][c2]:
                     dfs(r2, c2)
 
-        # start DFS from every occupied top-row cell
         for col in range(self.cols):
             if self.bubbles[0][col]:
                 dfs(0, col)
 
-        # enqueue floaters (scan bottom-up for nicer effect)
+        # enqueue floaters (scans bottom-up for nicer effect)
         for r in reversed(range(self.rows)):
             for c in range(self.cols):
                 bub = self.bubbles[r][c]
@@ -276,6 +287,7 @@ class BubbleGrid:
         self._floaters_scoring = False
 
     def add_row_to_top(self):
+        """Push grid down one row and insert a new random row at top; return False on overflow."""
         for col in range(self.cols):
             if self.bubbles[self.rows-1][col] is not None:
                 return False
@@ -298,41 +310,37 @@ class BubbleGrid:
         return True
     
     def register_non_clearing_shot(self) -> bool:
-        """Increments count; adds row if threshold reached.
-        Lowers threshold after each addition, cycles back to 6 after hitting 2.
-        Returns False if row addition causes game over."""
+        """Increment non-clearing counter and auto-add row when threshold reached."""
         self.non_clearing_count += 1
-
-        if self.non_clearing_count >= self.non_clearing_threshold:
+        if self.non_clearing_count > self.non_clearing_threshold:
             self.non_clearing_count = 0
 
             if not self.add_row_to_top():
-                return False  # game over due to overflow
+                return False  # game over: row can't be added without overflowing
 
-            # cycle threshold down to 2, then reset back to 6
-            if self.non_clearing_threshold > 2:
+            if self.non_clearing_threshold > 1:
                 self.non_clearing_threshold -= 1
             else:
-                self.non_clearing_threshold = 6
+                self.non_clearing_threshold = 5
 
         return True
 
     def update(self, now):
-        # pop animation and pop sound
+        """Process queued pops over time and handle floating-bubble checks."""
         while self.pop_queue and now >= self.next_pop_time:
             bubble = self.pop_queue.pop(0)
             self.remove_bubble(bubble)
             self.audio.play_pop()
             self.next_pop_time += self.pop_interval
 
-        # when chain finished and floaters still pending
         if self.pending_floater_check and not self.pop_queue:
             self.enqueue_floating_bubbles()
             self.pending_floater_check = False
-            if self.pop_queue:                 # floaters found
+            if self.pop_queue:
                 self.next_pop_time = now + self.pop_interval
 
     def update_all_bubbles(self):
+        """Refresh every bubble’s cell, position and neighbour links after big shifts."""
         for row in range(self.rows):
             for col in range(self.cols):
                 bubble = self.bubbles[row][col]
@@ -348,7 +356,7 @@ class BubbleGrid:
 
     def _debug_snap_info(self, anchor_row, anchor_col,
                          bubble_pos, DEBUG_SNAP = False):
-        """Console dump of neighbour cells and centre-to-centre distance."""
+        """Console dump of neighbour cells and centre-to-centre distances."""
         if not DEBUG_SNAP:
             return
 
@@ -362,6 +370,7 @@ class BubbleGrid:
             print(f"  {name:<13} cell=({r:2},{c:2})  {occ}  dist={dist:6.1f}")
 
 def compute_velocity(start_pos, target_pos, speed):
+    """Return a unit-direction vector scaled to speed from start to target position."""
     direction = pygame.Vector2(target_pos) - pygame.Vector2(start_pos)
     if direction.length() == 0:
         return pygame.Vector2(0, 0)
