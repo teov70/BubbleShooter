@@ -1,5 +1,5 @@
 # config.py
-from math import sqrt
+from math import sqrt, atan2, pi, sin, cos, degrees, hypot
 
 # Screen
 SCREEN_WIDTH = 1000
@@ -105,3 +105,9 @@ TRACKS = ["assets/sounds/cloud_jumper.ogg",
          "assets/sounds/lease-extended.ogg",
          "assets/sounds/my-chemical-romance-na-na-na.ogg"]
 
+
+ARROW_LEN      = 70        # pixels visible outside the shooter bubble
+ARROW_COLOR    = (150, 233, 255, 70)
+ARROW_THICK    = 6
+MIN_ANGLE = degrees(atan2(SHOOTER_Y - GRID_TOP_OFFSET - FIELD_HEIGHT, GRID_LEFT_OFFSET + FIELD_DRAW_WIDTH - SHOOTER_X))
+MAX_ANGLE = degrees(atan2(SHOOTER_Y - GRID_TOP_OFFSET - FIELD_HEIGHT, GRID_LEFT_OFFSET - SHOOTER_X))

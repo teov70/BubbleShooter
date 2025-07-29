@@ -44,6 +44,8 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     click_frame = True
                 elif event.type == self.audio.NEXT_EVENT:
@@ -102,19 +104,12 @@ class Game:
                 elif  self.ui.popup_buttons["quit"].is_clicked() or self.ui.popup_buttons["cross"].is_clicked():
                     self.audio.play_click()
                     self.running = False
-            
 
-            toggle_btn = self.ui.widget_buttons["play"] if self.audio.is_paused() \
-                    else self.ui.widget_buttons["pause"]
-
-            toggle_replay = self.ui.widget_buttons["replay"] if self.audio.loop \
-                    else self.ui.widget_buttons["replay1"]
-
-            if click_frame and toggle_btn.is_clicked():
+            if self.ui.widget_buttons["playpause"].is_clicked():
                 self.audio.play_click()
                 self.audio.toggle()
 
-            elif click_frame and toggle_replay.is_clicked():
+            elif self.ui.widget_buttons["replay"].is_clicked():
                 self.audio.play_click()
                 self.audio.toggle_loop()
 

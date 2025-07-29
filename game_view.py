@@ -16,6 +16,8 @@ class GameUI:
         pygame.draw.rect( self.field_surf, FIELD_COLOR,  self.field_surf.get_rect(), border_radius=20)
         self.bar_surf = pygame.Surface((COL_WIDTH*9.2, ROW_HEIGHT*1.3), pygame.SRCALPHA)
         pygame.draw.rect(self.bar_surf, BAR_COLOR, self.bar_surf.get_rect(), border_radius=45)
+        self._arrow_img = pygame.image.load("assets/sprites/arrow.png").convert_alpha()
+
 
         self.bubble_surfaces = {
             color: pygame.image.load(f"assets/sprites/bubble_{name}.png").convert_alpha()
@@ -55,10 +57,8 @@ class GameUI:
         self.widget_buttons = {
             "previous": Button(self.widget_assets["previous"], self.widget_assets["previous_hover"], (WIDGET_X, WIDGET_Y)),
             "next": Button(self.widget_assets["next"], self.widget_assets["next_hover"], (WIDGET_X, WIDGET_Y)),
-            "play": Button(self.widget_assets["play"], self.widget_assets["play_hover"], (WIDGET_X, WIDGET_Y)),
-            "pause": Button(self.widget_assets["pause"], self.widget_assets["pause_hover"], (WIDGET_X, WIDGET_Y)),
+            "playpause": Button(self.widget_assets["pause"], self.widget_assets["pause_hover"], (WIDGET_X, WIDGET_Y)),
             "replay": Button(self.widget_assets["replay"], self.widget_assets["replay_hover"], (WIDGET_X, WIDGET_Y)),
-            "replay1": Button(self.widget_assets["replay1"], self.widget_assets["replay1_hover"], (WIDGET_X, WIDGET_Y)),
         }
 
     def draw_bubble(self, bubble):
@@ -105,36 +105,36 @@ class GameUI:
         self.widget_buttons["previous"].update(mouse_pos, mouse_lmb)
         self.widget_buttons["next"].update(mouse_pos, mouse_lmb)
 
-        active_play_pause = "play" if self.audio.is_paused() else "pause"
-        self.widget_buttons[active_play_pause].update(mouse_pos, mouse_lmb)
+        pp = self.widget_buttons["playpause"]
+        if self.audio.is_paused():
+            pp._idle, pp._hover = self.widget_assets["play"], self.widget_assets["play_hover"]
+        else:
+            pp._idle, pp._hover = self.widget_assets["pause"], self.widget_assets["pause_hover"]
+        pp.update(mouse_pos, mouse_lmb)
 
-        active_replay = "replay" if self.audio.loop else "replay1"
-        self.widget_buttons[active_replay].update(mouse_pos, mouse_lmb)
+        rep = self.widget_buttons["replay"]
+        if self.audio.loop:
+            rep._idle, rep._hover = self.widget_assets["replay"], self.widget_assets["replay_hover"]
+        else:
+            rep._idle, rep._hover = self.widget_assets["replay1"],  self.widget_assets["replay1_hover"]
+        rep.update(mouse_pos, mouse_lmb)
 
-    def draw_ui(self, grid, bubble, next_bubble, warning_bubble, remaining_shots, mouse_pos, game_over, DEBUG=False):
+    def draw_ui(self, grid, bubble, next_bubble, warning_bubble, remaining_shots, mouse_pos, game_over, DEBUG=True):
         """Compose and draw the entire UI frame."""
         self.screen.blit(self.bg_img, (0, 0))
         self.screen.blit(self.widget_img, (WIDGET_X, WIDGET_Y))
-
         self.draw_game_field()
-        self.draw_bubble_bar()
         self.draw_bubble_grid(grid)
-
-        if bubble:
-            self.draw_bubble(bubble)
-            self.draw_bubble(next_bubble)
-
-        self.widget_buttons["previous"].draw(self.screen)
-        self.widget_buttons["next"].draw(self.screen)
-
-        toggle = self.widget_buttons["play"] if self.audio.is_paused() else self.widget_buttons["pause"]
-        toggle.draw(self.screen)
-
-        replay = self.widget_buttons["replay"] if self.audio.loop else self.widget_buttons["replay1"]
-        replay.draw(self.screen)
-
         self.draw_warning_bubbles(warning_bubble, remaining_shots)
         self.draw_score(grid.score)
+        if bubble: self.draw_bubble(next_bubble)
+        self.draw_bubble_bar()
+        if bubble:
+            self.draw_aim_arrow(mouse_pos)
+            self.draw_bubble(bubble)
+
+        for btn in self.widget_buttons.values():
+            btn.draw(self.screen)
 
         if game_over:
             self.screen.blit(self.popup_img, (POP_X, POP_Y))
@@ -144,6 +144,22 @@ class GameUI:
         if DEBUG:
             coords = self.fonts["debug"].render(str(mouse_pos), True, (0, 0, 0))
             self.screen.blit(coords, (0, 0))
+
+    def draw_aim_arrow(self, mouse_pos) -> None:
+        """Rotate the arrow sprite about its tail-pivot and blit at shooter."""
+
+        cx, cy = SHOOTER_X, SHOOTER_Y
+        dx, dy = mouse_pos[0] - cx, mouse_pos[1] - cy
+        if dx == dy == 0:
+            return
+
+        # compute angle (deg), pygame’s +Y is down so invert dy
+        angle = clamp_to_v(dx, -dy)
+        
+        # rotate around the image’s center (which is also its tail)
+        rotated = pygame.transform.rotozoom(self._arrow_img, angle, 1)
+        rect    = rotated.get_rect(center=(cx, cy))
+        self.screen.blit(rotated, rect)
 
 # Button class
 class Button:
@@ -182,3 +198,43 @@ class Button:
 
     def is_hovered(self) -> bool: return self._hovered
     def is_clicked(self) -> bool: return self._clicked
+
+def clamp_to_v(x, y, min=MIN_ANGLE, max=MAX_ANGLE):
+    if x == 0 and y == 0:
+        return 90
+    
+    θ = degrees(atan2(y, x)) % 360
+    if min <= θ <= max:
+        return θ
+    
+    return max if max < θ <= 270 else min
+
+#legacy method
+def create_arrow_surface(self):
+    """
+    Returns a Surface where the arrow's tail is at the surface center.
+    Lower half is transparent so visually it rotates around its tail.
+    """
+    surf_w, surf_h = 230, 40
+    surf = pygame.Surface((surf_w, surf_h), pygame.SRCALPHA)
+
+    cx, cy = surf_w // 2, surf_h // 2  # pivot location
+
+    # Shaft: thin rectangle extending rightward from the tail
+    shaft_len = ARROW_LEN
+    shaft_th  = ARROW_THICK
+    shaft_rect = (cx + 15, cy - shaft_th // 2, shaft_len, shaft_th)
+    pygame.draw.rect(surf, ARROW_COLOR, shaft_rect)
+
+    # Head: smaller triangle
+    head_width = 30
+    head_h     = surf_h // 4  # quarter of surface height
+    head_left_x = cx + shaft_len + 15
+    head_pts = [
+        (head_left_x,         cy - head_h),
+        (head_left_x + head_width, cy),
+        (head_left_x,         cy + head_h),
+    ]
+    pygame.draw.polygon(surf, ARROW_COLOR, head_pts)
+
+    return surf
