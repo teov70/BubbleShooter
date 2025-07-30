@@ -1,6 +1,6 @@
 import pygame
 import random
-from config import TRACKS, POP_SOUND_PATHS, PLOP_SOUND_PATH, CLICK_SOUND_PATH
+from config import TRACKS, POP_SOUND_PATHS, PLOP_SOUND_PATH, CLICK_SOUND_PATH, TITLES
 
 class AudioManager:
     NEXT_EVENT = pygame.USEREVENT + 1
@@ -17,6 +17,8 @@ class AudioManager:
         self.playlist = TRACKS
         self.playlist_len = len(self.playlist)
         self.track_num = 0
+        self.titles = TITLES
+        self.track_name = self.titles[0]
         self.loop: bool = True
 
         pygame.mixer.music.set_volume(0.5)
@@ -41,6 +43,7 @@ class AudioManager:
     @_safe
     def play_current(self):
         pygame.mixer.music.load(self.playlist[self.track_num])
+        self.track_name = self.titles[self.track_num]
         pygame.mixer.music.play()
 
     

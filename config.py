@@ -1,5 +1,5 @@
 # config.py
-from math import sqrt, atan2, pi, sin, cos, degrees, hypot
+from math import sqrt, atan2, degrees
 
 # Screen
 SCREEN_WIDTH = 1000
@@ -42,9 +42,14 @@ WIDGET_ASSETS = [
 ("pause_hover", "assets/sprites/pause_btn_hover.png"),
 ("replay", "assets/sprites/replay_btn.png"),
 ("replay_hover", "assets/sprites/replay_btn_hover.png"),
-("replay1", "assets/sprites/replay_btn1.png"),
-("replay1_hover", "assets/sprites/replay_btn1_hover.png"),
+("replay_off", "assets/sprites/replay_btn_off.png"),
+("replay_off_hover", "assets/sprites/replay_btn_off_hover.png"),
+("pause_small", "assets/sprites/pause_small.png")
 ]
+
+RESTART_POS = (930, 12)
+RESTART_SURF = [("restart", "assets/sprites/restart_btn.png"),
+               ("restart_hover", "assets/sprites/restart_btn_hover.png")]
 
 WIDGET_W, WIDGET_H = 500, 175
 WIDGET_X, WIDGET_Y = 236, SCREEN_HEIGHT - WIDGET_H
@@ -103,7 +108,13 @@ PLOP_SOUND_PATH = "assets/sounds/plop.wav"
 TRACKS = ["assets/sounds/cloud_jumper.ogg",
          "assets/sounds/lotus_waters.ogg",
          "assets/sounds/lease-extended.ogg",
+         "assets/sounds/Wii_Shop_Channel.ogg",
          "assets/sounds/my-chemical-romance-na-na-na.ogg"]
+TITLES = ["Cloud Jumper.mp3",
+         "Lotus Waters.mp3",
+         "Lease.mp3",
+         "Shop Channel.mp3",
+         "Na na na.mp3"]
 
 
 ARROW_LEN      = 70        # pixels visible outside the shooter bubble

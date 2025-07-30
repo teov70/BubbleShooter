@@ -33,14 +33,20 @@ class GameUI:
             key: pygame.image.load(path).convert_alpha()
             for key, path in WIDGET_ASSETS
             }
+        
+        self.restart_surf = {
+            key: pygame.image.load(path).convert_alpha()
+            for key, path in RESTART_SURF
+            }
 
         self.fonts = {
             "text": pygame.font.Font("assets/Arcade.ttf", 27),
             "score": pygame.font.Font("assets/Arcade.ttf", 52),
+            "track": pygame.font.Font("assets/Arcade.ttf", 16),
             "debug": pygame.font.Font(None, 24)
         }
 
-
+        self.restart_btn = Button(self.restart_surf["restart"], self.restart_surf["restart_hover"], RESTART_POS)
         self._init_popup_buttons()
         self._init_widget_buttons()
 
@@ -54,6 +60,7 @@ class GameUI:
 
     def _init_widget_buttons(self):
         self.widget_img = self.widget_assets["widget"]
+        self.pause_small = self.widget_assets["pause_small"]
         self.widget_buttons = {
             "previous": Button(self.widget_assets["previous"], self.widget_assets["previous_hover"], (WIDGET_X, WIDGET_Y)),
             "next": Button(self.widget_assets["next"], self.widget_assets["next_hover"], (WIDGET_X, WIDGET_Y)),
@@ -79,13 +86,14 @@ class GameUI:
     def draw_bubble_bar(self):
         self.screen.blit(self.bar_surf, (GRID_LEFT_OFFSET-4, GRID_TOP_OFFSET + FIELD_HEIGHT + 1.9*ROW_HEIGHT))
 
-    def draw_warning_bubbles(self, warning_bubble, remaining: int):
+    def draw_warning_bubbles(self, warning_bubble, non_clearing_count, non_clearing_threshold):
         """Draw gray bubbles that indicate shots remaining before a new row."""
+        remaining_shots = max(0, non_clearing_threshold - non_clearing_count)
         bubble_spacing = 40
         x0, y = warning_bubble.pos
         original_pos = warning_bubble.pos
 
-        for i in range(remaining):
+        for i in range(remaining_shots):
             warning_bubble.pos = (x0 + i * bubble_spacing, y)
             self.draw_bubble(warning_bubble)
 
@@ -94,14 +102,18 @@ class GameUI:
     def draw_score(self, score):
             text_surf = self.fonts["text"].render(f"Score", True, (255, 255, 255))
             score_surf = self.fonts["score"].render(f"{score}", True, (255, 255, 255))
+            track_surf = self.fonts["track"].render(f"{self.audio.track_name}", True, (255, 255, 255))
             self.screen.blit(text_surf, (430, 720))
             self.screen.blit(score_surf, (430, 687))
+            self.screen.blit(track_surf, (433, 672))
 
     def update_buttons(self, mouse_pos, mouse_lmb, game_over):
         """Update hover/click states for visible buttons."""
         if game_over:
             for btn in self.popup_buttons.values():
                 btn.update(mouse_pos, mouse_lmb)
+        
+        self.restart_btn.update(mouse_pos, mouse_lmb)
         self.widget_buttons["previous"].update(mouse_pos, mouse_lmb)
         self.widget_buttons["next"].update(mouse_pos, mouse_lmb)
 
@@ -116,22 +128,27 @@ class GameUI:
         if self.audio.loop:
             rep._idle, rep._hover = self.widget_assets["replay"], self.widget_assets["replay_hover"]
         else:
-            rep._idle, rep._hover = self.widget_assets["replay1"],  self.widget_assets["replay1_hover"]
+            rep._idle, rep._hover = self.widget_assets["replay_off"],  self.widget_assets["replay_off_hover"]
         rep.update(mouse_pos, mouse_lmb)
 
-    def draw_ui(self, grid, bubble, next_bubble, warning_bubble, remaining_shots, mouse_pos, game_over, DEBUG=True):
+    def draw_ui(self, grid, bubble, next_bubble, warning_bubble, mouse_pos, game_over, DEBUG=False):
         """Compose and draw the entire UI frame."""
         self.screen.blit(self.bg_img, (0, 0))
         self.screen.blit(self.widget_img, (WIDGET_X, WIDGET_Y))
         self.draw_game_field()
         self.draw_bubble_grid(grid)
-        self.draw_warning_bubbles(warning_bubble, remaining_shots)
+        self.draw_warning_bubbles(warning_bubble, grid.non_clearing_count, grid.non_clearing_threshold)
         self.draw_score(grid.score)
+        self.restart_btn.draw(self.screen)
+
         if bubble: self.draw_bubble(next_bubble)
         self.draw_bubble_bar()
         if bubble:
             self.draw_aim_arrow(mouse_pos)
             self.draw_bubble(bubble)
+
+        if self.audio.is_paused():
+            self.screen.blit(self.pause_small, (WIDGET_X, WIDGET_Y))
 
         for btn in self.widget_buttons.values():
             btn.draw(self.screen)
