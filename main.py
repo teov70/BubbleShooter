@@ -33,7 +33,7 @@ class Game:
 
     def should_shoot(self, mouse_pos, click_frame):
         """Return True when a left-click is valid for firing the bubble."""
-        return (click_frame and self.bubble_ready and self.bubble.velocity.length_squared() == 0 and
+        return (click_frame and self.bubble_ready and self.bubble is not None and self.bubble.velocity.length_squared() == 0 and
                 GRID_LEFT_OFFSET <= mouse_pos[0] <= GRID_LEFT_OFFSET + FIELD_DRAW_WIDTH and
                 GRID_TOP_OFFSET  <= mouse_pos[1] <= GRID_TOP_OFFSET  + FIELD_HEIGHT)
 
@@ -61,6 +61,7 @@ class Game:
             if not self.game_over:
                 # Shoot bubble
                 if self.should_shoot(mouse_pos, click_frame):
+                    assert self.bubble is not None
                     self.bubble.velocity = compute_velocity(self.bubble.pos, mouse_pos, PROJECTILE_SPEED)
                     self.bubble_ready = False
 

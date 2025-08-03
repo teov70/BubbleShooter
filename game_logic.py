@@ -10,7 +10,7 @@ class Bubble:
         self.radius = radius
         self.pos = pygame.Vector2(pos)       # Accepts tuple or Vector2
         self.velocity = pygame.Vector2(velocity)
-        self.cell = None
+        self.cell: tuple[int, int] | None = None
         self.neighbors = {direction : None for direction in DIRECTIONS}
 
     def check_collision_with_neighbors(self, grid) -> bool:
@@ -69,8 +69,7 @@ class BubbleGrid:
         self.audio = audio
         self.rows = rows
         self.cols = cols
-        self.bubbles = [[None] * self.cols for _ in range(self.rows)]
-
+        self.bubbles: list[list[Bubble | None]] = [[None] * self.cols for _ in range(self.rows)]
         self.pop_queue: list[Bubble] = []   # bubbles waiting to pop
         self.pop_interval = 100
         self.next_pop_time = 0              # timestamp of next pop
@@ -295,8 +294,9 @@ class BubbleGrid:
         for row in reversed(range(self.rows - 1)):
             for col in range(self.cols):
                 self.bubbles[row + 1][col] = self.bubbles[row][col]
-                if self.bubbles[row + 1][col]:
-                    self.bubbles[row + 1][col].cell = (row + 1, col)
+                bubble = self.bubbles[row + 1][col]
+                if bubble:
+                    bubble.cell = (row + 1, col)
         
         # Insert a new random row at the top (row 0)
         for col in range(self.cols):
