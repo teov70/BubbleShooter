@@ -27,10 +27,9 @@ GAME_OVER_ASSETS = [
 
 # Game Over Popup geometry
 POP_W, POP_H = 337, 220
-POP_X = (SCREEN_WIDTH - POP_W) // 2          # 331
-POP_Y = (SCREEN_HEIGHT - POP_H) // 2          # 290
+POP_POS = ((SCREEN_WIDTH - POP_W) // 2, (SCREEN_HEIGHT - POP_H) // 2)       # (331, 290)
 
-WIDGET_ASSETS = [
+HUD_ASSETS = [
 ("widget", "assets/sprites/widget.png"),
 ("previous", "assets/sprites/previous_btn.png"),
 ("next", "assets/sprites/next_btn.png"),
@@ -44,16 +43,14 @@ WIDGET_ASSETS = [
 ("replay_hover", "assets/sprites/replay_btn_hover.png"),
 ("replay_off", "assets/sprites/replay_btn_off.png"),
 ("replay_off_hover", "assets/sprites/replay_btn_off_hover.png"),
-("pause_small", "assets/sprites/pause_small.png")
+("pause_small", "assets/sprites/pause_small.png"),
+("restart", "assets/sprites/restart_btn.png"),
+("restart_hover", "assets/sprites/restart_btn_hover.png")
 ]
 
-RESTART_POS = (930, 12)
-RESTART_SURF = [("restart", "assets/sprites/restart_btn.png"),
-               ("restart_hover", "assets/sprites/restart_btn_hover.png")]
-
 WIDGET_W, WIDGET_H = 500, 175
-WIDGET_X, WIDGET_Y = 236, SCREEN_HEIGHT - WIDGET_H
-
+WIDGET_POS = (236, SCREEN_HEIGHT - WIDGET_H)
+RESTART_POS = (930, 12)
 
 # Bubble
 BUBBLE_RADIUS = 15

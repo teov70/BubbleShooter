@@ -121,12 +121,11 @@ class Game:
                 self.audio.play_click()
                 self.audio.previous()
 
-            elif self.ui.restart_btn.is_clicked():
+            elif self.ui.widget_buttons["restart"].is_clicked():
                 self.audio.play_click()
                 self.restart_game()
 
             # _________ drawing _________
-            #remaining_shots = max(0, self.grid.non_clearing_threshold - self.grid.non_clearing_count)
             self.ui.draw_ui(self.grid, self.bubble, self.next_bubble, self.warning_bubble, mouse_pos, self.game_over)
 
             pygame.display.flip()

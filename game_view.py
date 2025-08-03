@@ -2,6 +2,7 @@
 import pygame
 from config import *
 from audio import AudioManager
+from math import atan2, degrees
 
 #GameUI class
 class GameUI:
@@ -29,14 +30,9 @@ class GameUI:
             for key, path in GAME_OVER_ASSETS
             }
         
-        self.widget_assets = {
+        self.hud_assets = {
             key: pygame.image.load(path).convert_alpha()
-            for key, path in WIDGET_ASSETS
-            }
-        
-        self.restart_surf = {
-            key: pygame.image.load(path).convert_alpha()
-            for key, path in RESTART_SURF
+            for key, path in HUD_ASSETS
             }
 
         self.fonts = {
@@ -45,27 +41,26 @@ class GameUI:
             "track": pygame.font.Font("assets/Arcade.ttf", 16),
             "debug": pygame.font.Font(None, 24)
         }
-
-        self.restart_btn = Button(self.restart_surf["restart"], self.restart_surf["restart_hover"], RESTART_POS)
         self._init_popup_buttons()
         self._init_widget_buttons()
 
     def _init_popup_buttons(self):
         self.popup_img = self.popup_assets["popup"]
         self.popup_buttons = {
-            "yes": Button(self.popup_assets["yes"], self.popup_assets["yes_hover"], (POP_X, POP_Y)),
-            "quit": Button(self.popup_assets["quit"], self.popup_assets["quit_hover"], (POP_X, POP_Y)),
-            "cross": Button(self.popup_assets["cross"], self.popup_assets["cross_hover"], (POP_X, POP_Y)),
+            "yes": Button(self.popup_assets["yes"], self.popup_assets["yes_hover"], POP_POS),
+            "quit": Button(self.popup_assets["quit"], self.popup_assets["quit_hover"], POP_POS),
+            "cross": Button(self.popup_assets["cross"], self.popup_assets["cross_hover"], POP_POS),
         }
 
     def _init_widget_buttons(self):
-        self.widget_img = self.widget_assets["widget"]
-        self.pause_small = self.widget_assets["pause_small"]
+        self.widget_img = self.hud_assets["widget"]
+        self.pause_small = self.hud_assets["pause_small"]
         self.widget_buttons = {
-            "previous": Button(self.widget_assets["previous"], self.widget_assets["previous_hover"], (WIDGET_X, WIDGET_Y)),
-            "next": Button(self.widget_assets["next"], self.widget_assets["next_hover"], (WIDGET_X, WIDGET_Y)),
-            "playpause": Button(self.widget_assets["pause"], self.widget_assets["pause_hover"], (WIDGET_X, WIDGET_Y)),
-            "replay": Button(self.widget_assets["replay"], self.widget_assets["replay_hover"], (WIDGET_X, WIDGET_Y)),
+            "previous": Button(self.hud_assets["previous"], self.hud_assets["previous_hover"], WIDGET_POS),
+            "next": Button(self.hud_assets["next"], self.hud_assets["next_hover"], WIDGET_POS),
+            "playpause": Button(self.hud_assets["pause"], self.hud_assets["pause_hover"], WIDGET_POS),
+            "replay": Button(self.hud_assets["replay"], self.hud_assets["replay_hover"], WIDGET_POS),
+            "restart": Button(self.hud_assets["restart"], self.hud_assets["restart_hover"], RESTART_POS)
         }
 
     def draw_bubble(self, bubble):
@@ -113,33 +108,32 @@ class GameUI:
             for btn in self.popup_buttons.values():
                 btn.update(mouse_pos, mouse_lmb)
         
-        self.restart_btn.update(mouse_pos, mouse_lmb)
         self.widget_buttons["previous"].update(mouse_pos, mouse_lmb)
         self.widget_buttons["next"].update(mouse_pos, mouse_lmb)
+        self.widget_buttons["restart"].update(mouse_pos, mouse_lmb)
 
         pp = self.widget_buttons["playpause"]
         if self.audio.is_paused():
-            pp._idle, pp._hover = self.widget_assets["play"], self.widget_assets["play_hover"]
+            pp._idle, pp._hover = self.hud_assets["play"], self.hud_assets["play_hover"]
         else:
-            pp._idle, pp._hover = self.widget_assets["pause"], self.widget_assets["pause_hover"]
+            pp._idle, pp._hover = self.hud_assets["pause"], self.hud_assets["pause_hover"]
         pp.update(mouse_pos, mouse_lmb)
 
         rep = self.widget_buttons["replay"]
         if self.audio.loop:
-            rep._idle, rep._hover = self.widget_assets["replay"], self.widget_assets["replay_hover"]
+            rep._idle, rep._hover = self.hud_assets["replay"], self.hud_assets["replay_hover"]
         else:
-            rep._idle, rep._hover = self.widget_assets["replay_off"],  self.widget_assets["replay_off_hover"]
+            rep._idle, rep._hover = self.hud_assets["replay_off"],  self.hud_assets["replay_off_hover"]
         rep.update(mouse_pos, mouse_lmb)
 
     def draw_ui(self, grid, bubble, next_bubble, warning_bubble, mouse_pos, game_over, DEBUG=False):
         """Compose and draw the entire UI frame."""
         self.screen.blit(self.bg_img, (0, 0))
-        self.screen.blit(self.widget_img, (WIDGET_X, WIDGET_Y))
+        self.screen.blit(self.widget_img, WIDGET_POS)
         self.draw_game_field()
         self.draw_bubble_grid(grid)
         self.draw_warning_bubbles(warning_bubble, grid.non_clearing_count, grid.non_clearing_threshold)
         self.draw_score(grid.score)
-        self.restart_btn.draw(self.screen)
 
         if bubble: self.draw_bubble(next_bubble)
         self.draw_bubble_bar()
@@ -148,13 +142,13 @@ class GameUI:
             self.draw_bubble(bubble)
 
         if self.audio.is_paused():
-            self.screen.blit(self.pause_small, (WIDGET_X, WIDGET_Y))
+            self.screen.blit(self.pause_small, WIDGET_POS)
 
         for btn in self.widget_buttons.values():
             btn.draw(self.screen)
 
         if game_over:
-            self.screen.blit(self.popup_img, (POP_X, POP_Y))
+            self.screen.blit(self.popup_img, POP_POS)
             for btn in self.popup_buttons.values():
                 btn.draw(self.screen)
 
@@ -216,15 +210,15 @@ class Button:
     def is_hovered(self) -> bool: return self._hovered
     def is_clicked(self) -> bool: return self._clicked
 
-def clamp_to_v(x, y, min=MIN_ANGLE, max=MAX_ANGLE):
+def clamp_to_v(x, y, lo=MIN_ANGLE, hi=MAX_ANGLE):
     if x == 0 and y == 0:
         return 90
     
     θ = degrees(atan2(y, x)) % 360
-    if min <= θ <= max:
+    if lo <= θ <= hi:
         return θ
     
-    return max if max < θ <= 270 else min
+    return hi if hi < θ <= 270 else lo
 
 #legacy method
 def create_arrow_surface(self):
