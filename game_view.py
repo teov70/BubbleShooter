@@ -188,16 +188,16 @@ class Button:
         self.rect   = self._idle.get_rect(topleft=pos)
         self.mask   = pygame.mask.from_surface(self._idle)
 
-        self._hovered       = False
-        self._clicked       = False
-        self._prev_pressed  = False
+        self._hovered: bool = False
+        self._clicked: bool = False
+        self._prev_pressed: bool = False
 
     def update(self, mouse_pos, mouse_pressed_lmb: bool) -> None:
         """Refresh hover and click flags based on current mouse position and button press."""
         lx = mouse_pos[0] - self.rect.x
         ly = mouse_pos[1] - self.rect.y
         inside = (0 <= lx < self.rect.w) and (0 <= ly < self.rect.h)
-        self._hovered = inside and self.mask.get_at((lx, ly))
+        self._hovered = inside and bool(self.mask.get_at((lx, ly)))
 
         now_pressed  = self._hovered and mouse_pressed_lmb
         self._clicked = now_pressed and not self._prev_pressed
