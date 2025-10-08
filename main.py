@@ -35,7 +35,7 @@ class Game:
         """Return True when a left-click is valid for firing the bubble."""
         return (click_frame and self.bubble_ready and self.bubble.velocity.length_squared() == 0 and
                 GRID_LEFT_OFFSET <= mouse_pos[0] <= GRID_LEFT_OFFSET + FIELD_DRAW_WIDTH and
-                GRID_TOP_OFFSET  <= mouse_pos[1] <= GRID_TOP_OFFSET  + FIELD_HEIGHT)
+                GRID_TOP_OFFSET  <= mouse_pos[1] <= GRID_TOP_OFFSET  + FIELD_HEIGHT and not self.grid.pop_queue)
 
     def run(self):
         """Execute the event loop, update logic, and delegate all rendering."""
